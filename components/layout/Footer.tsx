@@ -1,6 +1,7 @@
 'use client';
 import { Facebook, Youtube, Music2 } from 'lucide-react';
 import Link from 'next/link';
+<<<<<<< HEAD
 import { usePathname } from 'next/navigation';
 
 export default function Footer() {
@@ -10,6 +11,10 @@ export default function Footer() {
     return null;
   }
 
+=======
+
+export default function Footer() {
+>>>>>>> ab8700975eb2328c3c701be26a38718b83b5cc10
   return (
     <footer className="bg-white pt-12">
       {/* Top Section - Route Links */}
@@ -59,6 +64,7 @@ export default function Footer() {
             vexere
           </Link>
           <div className="grid grid-cols-2 gap-4 mb-6">
+<<<<<<< HEAD
             <div className="h-10 bg-gray-100 rounded border flex items-center justify-center grayscale text-[10px] text-gray-400">Badge 1</div>
             <div className="h-10 bg-gray-100 rounded border flex items-center justify-center grayscale text-[10px] text-gray-400">Badge 2</div>
             <div className="h-10 bg-gray-100 rounded border flex items-center justify-center grayscale text-[10px] text-gray-400">Badge 3</div>
@@ -67,6 +73,16 @@ export default function Footer() {
           <h4 className="font-bold mb-3 text-gray-800">Đối tác thanh toán</h4>
           <div className="flex flex-wrap gap-2">
             {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+=======
+             <div className="h-10 bg-gray-100 rounded border flex items-center justify-center grayscale text-[10px] text-gray-400">Badge 1</div>
+             <div className="h-10 bg-gray-100 rounded border flex items-center justify-center grayscale text-[10px] text-gray-400">Badge 2</div>
+             <div className="h-10 bg-gray-100 rounded border flex items-center justify-center grayscale text-[10px] text-gray-400">Badge 3</div>
+             <div className="h-10 bg-gray-100 rounded border flex items-center justify-center grayscale text-[10px] text-gray-400">Badge 4</div>
+          </div>
+          <h4 className="font-bold mb-3 text-gray-800">Đối tác thanh toán</h4>
+          <div className="flex flex-wrap gap-2">
+            {[1,2,3,4,5,6,7,8].map(i => (
+>>>>>>> ab8700975eb2328c3c701be26a38718b83b5cc10
               <div key={i} className="w-8 h-8 bg-gray-50 border rounded flex items-center justify-center text-[8px] text-gray-300">P{i}</div>
             ))}
           </div>
