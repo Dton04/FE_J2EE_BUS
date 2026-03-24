@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Globe, HelpCircle, User, ChevronDown, Phone } from 'lucide-react';
 import LoginModal from '@/components/auth/LoginModal';
 import RegisterModal from '@/components/auth/RegisterModal';
@@ -9,16 +9,11 @@ import { usePathname } from 'next/navigation';
 
 export default function Header() {
   const pathname = usePathname();
-  const { isAuthenticated, userProfile, logout } = useAuthStore();
+  const { isAuthenticated, logout } = useAuthStore();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted || pathname?.startsWith('/admin')) {
+  if (pathname?.startsWith('/admin')) {
     return null;
   }
   return (
@@ -38,16 +33,18 @@ export default function Header() {
           <div className="hidden lg:flex items-center gap-4 font-medium">
             <span className="cursor-pointer hover:underline">Đơn hàng của tôi</span>
             <span className="cursor-pointer hover:underline">Mở bán vé trên Vexere</span>
-            <span className="cursor-pointer hover:underline flex items-center gap-1">Trở thành đối tác <ChevronDown size={14} /></span>
+            <Link href="/tro-thanh-doi-tac" className="text-sm font-medium hover:bg-white/10 p-2 rounded-lg transition">Trở thành đối tác</Link>
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-1 hover:bg-white/10 p-2 rounded-full transition"><Globe size={20} /></button>
-            <button className="flex items-center gap-1 hover:bg-white/10 p-2 rounded-full transition"><HelpCircle size={20} /></button>
-            <button className="flex items-center gap-2 font-medium bg-white text-gray-800 px-3 py-1.5 rounded-full hover:bg-gray-50 transition hidden sm:flex">
+            <div className="flex items-center gap-1">
+              <button title="Change Language" className="flex items-center gap-1 hover:bg-white/10 p-2 rounded-full transition"><Globe size={20} /></button>
+              <button title="Help Center" className="flex items-center gap-1 hover:bg-white/10 p-2 rounded-full transition"><HelpCircle size={20} /></button>
+            </div>
+            <a href="tel:19001000" className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-sm font-semibold px-4 py-2 rounded-full transition">
               <Phone size={16} className="text-[#2474E5] fill-[#2474E5]" />
               <span className="text-[#2474E5] font-bold">Hotline 24/7</span>
-            </button>
+            </a>
 
             {isAuthenticated ? (
               <div className="relative group ml-1">

@@ -25,7 +25,7 @@ export const tripService = {
     }
   },
 
-  getSeatMap: async (tripId: number) => {
+  getSeatMap: async (tripId: number | string) => {
     try {
       const response = await api.get(`/trips/${tripId}/seats`);
       return response.data;
@@ -35,7 +35,7 @@ export const tripService = {
     }
   },
 
-  getPassengers: async (tripId: number) => {
+  getPassengers: async (tripId: number | string) => {
     try {
       const response = await api.get(`/trips/${tripId}/passengers`);
       return response.data;
@@ -45,7 +45,7 @@ export const tripService = {
     }
   },
 
-  getStops: async (tripId: number) => {
+  getStops: async (tripId: number | string) => {
     try {
       const response = await api.get(`/trips/${tripId}/stops`);
       return response.data;

@@ -30,8 +30,15 @@ export default function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateS
       await adminUserService.createStaff(formData);
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra khi tạo nhân viên');
+    } catch (err: unknown) {
+      const message =
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err &&
+        typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === 'string'
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : 'Có lỗi xảy ra khi tạo nhân viên';
+      setError(message || 'Có lỗi xảy ra khi tạo nhân viên');
     } finally {
       setLoading(false);
     }
@@ -41,8 +48,8 @@ export default function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateS
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-800">Thêm nhân viên mới</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600">
+          <h2 className="text-lg font-semibold text-gray-800">Tạo nhân viên mới</h2>
+          <button onClick={onClose} title="Close Modal" className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600">
             <X size={20} />
           </button>
         </div>
@@ -91,9 +98,10 @@ export default function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateS
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-bold text-gray-700">Vai trò</label>
+            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">Vai trò</label>
             <select
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-blue-400 transition bg-white"
+              id="role"
+              title="Select Role"
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
             >

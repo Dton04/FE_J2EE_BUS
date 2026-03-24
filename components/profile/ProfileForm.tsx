@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { authService } from '@/services/authService';
 
 export default function ProfileForm() {
-  const { userProfile, setUserProfile } = useAuthStore();
+  const { setUserProfile } = useAuthStore();
   const [loading, setLoading] = useState(true);
   
   const [fullName, setFullName] = useState('');
@@ -20,7 +20,7 @@ export default function ProfileForm() {
         const profile = await authService.getProfile();
         setUserProfile(profile);
         setFullName(profile.full_name || '');
-        setPhone(profile.phone || '');
+        setPhone(profile.phone || profile.phone_number || '');
         setBirthDate(profile.birth_date || '');
         setGender(profile.gender || 'Nam');
       } catch (error) {
@@ -78,13 +78,13 @@ export default function ProfileForm() {
           <label className="text-[14px] text-gray-600">Ngày sinh</label>
           <div className="relative">
             <input
-              type="text" // Using text to match standard UI placeholder style "YYYY MM DD"
+              type="date"
+              title="Ngày sinh"
               value={birthDate}
               onChange={(e) => setBirthDate(e.target.value)}
-              placeholder="VD: 2004 12 23"
-              className="w-full border border-gray-300 rounded-lg pl-4 pr-10 py-2.5 text-[15px] focus:outline-none focus:border-[#2474E5] focus:ring-1 focus:ring-[#2474E5] transition"
+              className="w-full p-2 border rounded"
             />
-            <button className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <button type="button" title="Select Date" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
               <Calendar size={20} />
             </button>
           </div>

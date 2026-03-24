@@ -4,7 +4,6 @@ import {
   Plus, 
   Search, 
   Filter, 
-  MoreVertical, 
   Edit2, 
   Trash2, 
   ExternalLink,
@@ -15,10 +14,21 @@ import {
 import CreateRouteModal from '@/components/admin/CreateRouteModal';
 import { tripService } from '@/services/tripService';
 
+interface AdminTrip {
+  id: number;
+  operator?: string;
+  route?: string;
+  time?: string;
+  date?: string;
+  price?: string;
+  seats?: number | string;
+  status?: string;
+}
+
 export default function AdminTripsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [trips, setTrips] = useState<any[]>([]);
+  const [trips, setTrips] = useState<AdminTrip[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchTrips = useCallback(async () => {
@@ -74,7 +84,7 @@ export default function AdminTripsPage() {
             <Filter size={18} />
             Bộ lọc
           </button>
-          <select className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 outline-none hover:bg-gray-50 transition font-medium">
+          <select title="Filter by Status" className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 outline-none hover:bg-gray-50 transition font-medium">
             <option>Tất cả trạng thái</option>
             <option>Đang chạy</option>
             <option>Sắp khởi hành</option>
@@ -153,9 +163,9 @@ export default function AdminTripsPage() {
           <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
             <div className="text-sm text-gray-500 font-medium">Hiển thị {filteredTrips.length} chuyến</div>
             <div className="flex items-center gap-1">
-              <button className="p-2 border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed"><ChevronLeft size={18}/></button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#2474E5] text-white font-bold text-sm">1</button>
-              <button className="p-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition"><ChevronRight size={18}/></button>
+              <button title="Previous Page" className="p-2 border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed"><ChevronLeft size={18}/></button>
+              <span className="text-sm font-medium text-gray-600">Page 1 of 10</span>
+              <button title="Next Page" className="p-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition"><ChevronRight size={18}/></button>
             </div>
           </div>
         )}
