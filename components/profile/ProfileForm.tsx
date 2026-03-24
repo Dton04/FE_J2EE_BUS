@@ -1,9 +1,46 @@
 'use client';
-import { useState } from 'react';
-import { Calendar } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Calendar, Loader2 } from 'lucide-react';
+import { useAuthStore } from '@/store/useAuthStore';
+import { authService } from '@/services/authService';
 
 export default function ProfileForm() {
+  const { userProfile, setUserProfile } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+  
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [gender, setGender] = useState('Nam');
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setLoading(true);
+      try {
+        const profile = await authService.getProfile();
+        setUserProfile(profile);
+        setFullName(profile.full_name || '');
+        setPhone(profile.phone || '');
+        setBirthDate(profile.birth_date || '');
+        setGender(profile.gender || 'Nam');
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [setUserProfile]);
+
+  if (loading) {
+    return (
+      <div className="flex-1 bg-white rounded-xl shadow-sm p-12 flex flex-col items-center justify-center gap-4">
+        <Loader2 className="animate-spin text-[#2474E5]" size={40} />
+        <p className="text-gray-500 font-medium">Đang tải thông tin cá nhân...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 bg-white rounded-xl shadow-sm p-6 lg:p-8">
@@ -16,7 +53,9 @@ export default function ProfileForm() {
           </label>
           <input
             type="text"
-            defaultValue="Tấn Hưng"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="Nhập họ và tên"
             className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-[15px] focus:outline-none focus:border-[#2474E5] focus:ring-1 focus:ring-[#2474E5] transition"
           />
         </div>
@@ -26,7 +65,9 @@ export default function ProfileForm() {
           <label className="text-[14px] text-gray-600">Số điện thoại</label>
           <input
             type="text"
-            defaultValue="934341875"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Chưa có số điện thoại"
             disabled
             className="w-full border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-[15px] text-gray-600 outline-none cursor-not-allowed"
           />
@@ -38,7 +79,9 @@ export default function ProfileForm() {
           <div className="relative">
             <input
               type="text" // Using text to match standard UI placeholder style "YYYY MM DD"
-              defaultValue="2004 12 23"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              placeholder="VD: 2004 12 23"
               className="w-full border border-gray-300 rounded-lg pl-4 pr-10 py-2.5 text-[15px] focus:outline-none focus:border-[#2474E5] focus:ring-1 focus:ring-[#2474E5] transition"
             />
             <button className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">

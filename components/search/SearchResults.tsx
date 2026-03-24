@@ -38,10 +38,15 @@ export default function SearchResults() {
       try {
         const fromStr = searchParams.get('from') || 'Hà Nội';
         const toStr = searchParams.get('to') || 'Nha Trang';
-        const dateStr = searchParams.get('date') || new Date().toISOString().split('T')[0];
+        
+        const formatLocalYMD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const dateStr = searchParams.get('date') || formatLocalYMD(new Date());
+        
+        const fromIdParam = searchParams.get('fromId');
+        const toIdParam = searchParams.get('toId');
 
-        const originId = LOCATION_MAP[fromStr] || 1;
-        const destinationId = LOCATION_MAP[toStr] || 4;
+        const originId = fromIdParam ? parseInt(fromIdParam) : (LOCATION_MAP[fromStr] || 1);
+        const destinationId = toIdParam ? parseInt(toIdParam) : (LOCATION_MAP[toStr] || 4);
 
         const data = await tripService.searchTrips(originId, destinationId, dateStr);
         

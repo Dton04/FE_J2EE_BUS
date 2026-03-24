@@ -2,9 +2,18 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Bus, Users, Settings, LogOut } from 'lucide-react';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useRouter } from 'next/navigation';
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuthStore();
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
 
   const menuItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -32,8 +41,8 @@ export default function AdminSidebar() {
               key={item.name}
               href={item.href}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                  ? 'bg-[#2474E5] text-white shadow-sm font-bold'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-[#2474E5]'
+                ? 'bg-[#2474E5] text-white shadow-sm font-bold'
+                : 'text-gray-500 hover:bg-gray-50 hover:text-[#2474E5]'
                 }`}
             >
               <Icon size={20} className={isActive ? 'text-white' : 'text-gray-400'} />
@@ -44,7 +53,10 @@ export default function AdminSidebar() {
       </div>
 
       <div className="p-4 border-t border-gray-100">
-        <button className="flex items-center gap-3 px-4 py-3 w-full text-red-500 hover:bg-red-50 rounded-lg transition-colors text-left font-bold">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-4 py-3 w-full text-red-500 hover:bg-red-50 rounded-lg transition-colors text-left font-bold"
+        >
           <LogOut size={20} />
           Đăng xuất
         </button>

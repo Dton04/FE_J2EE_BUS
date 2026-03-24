@@ -9,9 +9,9 @@ export default function AdminHeader() {
     <header className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between shadow-sm">
       <div className="flex items-center gap-2 max-w-sm w-full bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400 transition-all">
         <Search size={18} className="text-gray-400" />
-        <input 
-          type="text" 
-          placeholder="Tìm kiếm..." 
+        <input
+          type="text"
+          placeholder="Tìm kiếm..."
           className="bg-transparent outline-none w-full text-sm placeholder-gray-400"
         />
       </div>
@@ -21,7 +21,7 @@ export default function AdminHeader() {
           <Bell size={20} />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
         </button>
-        
+
         <div className="h-8 w-px bg-gray-200 mx-2"></div>
 
         <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">

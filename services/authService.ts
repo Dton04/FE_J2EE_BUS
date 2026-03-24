@@ -9,8 +9,10 @@ export const authService = {
     const response = await api.post('/auth/register', userData);
     return response.data;
   },
-  getProfile: async () => {
-    const response = await api.get('/users/profile');
+  getProfile: async (token?: string) => {
+    const response = await api.get('/users/profile', {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
     return response.data;
   }
 };

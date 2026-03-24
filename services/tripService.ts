@@ -63,5 +63,20 @@ export const tripService = {
       console.error('Error fetching all trips:', error);
       throw error;
     }
+  },
+
+  createTrip: async (data: {
+    route_id: number;
+    bus_id: number;
+    departure_time: string;
+    price_modifier: number;
+  }) => {
+    try {
+      const response = await api.post('/admin/trips', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating trip:', error);
+      throw error;
+    }
   }
 };

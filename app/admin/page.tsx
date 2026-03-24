@@ -1,8 +1,8 @@
 'use client';
-import { 
-  Users, 
-  Bus, 
-  Ticket, 
+import {
+  Users,
+  Bus,
+  Ticket,
   TrendingUp,
   ArrowUpRight,
   ArrowDownRight,
@@ -81,10 +81,9 @@ export default function AdminDashboard() {
                   <td className="px-6 py-4 text-sm text-gray-500 font-medium">{bk.date}</td>
                   <td className="px-6 py-4 text-sm font-bold text-gray-900">{bk.amount}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex px-2 py-1 rounded text-[11px] font-bold uppercase ${
-                      bk.status === 'Thành công' ? 'bg-green-100 text-green-700' :
-                      bk.status === 'Chờ thanh toán' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
-                    }`}>
+                    <span className={`inline-flex px-2 py-1 rounded text-[11px] font-bold uppercase ${bk.status === 'Thành công' ? 'bg-green-100 text-green-700' :
+                        bk.status === 'Chờ thanh toán' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                      }`}>
                       {bk.status}
                     </span>
                   </td>

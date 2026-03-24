@@ -5,6 +5,7 @@ import * as z from 'zod';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const loginSchema = z.object({
   email: z.string().email('Email không hợp lệ'),
@@ -14,6 +15,7 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginModal({ onClose, onSwitchToRegister }: { onClose: () => void, onSwitchToRegister: () => void }) {
+  const router = useRouter();
   const { setTokens, setUserProfile } = useAuthStore();
   const [errorMsg, setErrorMsg] = useState('');
   
@@ -34,12 +36,18 @@ export default function LoginModal({ onClose, onSwitchToRegister }: { onClose: (
       
       if (res.access_token) {
         setTokens(res.access_token, res.refresh_token);
-        // fetch profile after login
+        // Pass access token directly to bypass possible interceptor race condition
         try {
-           const profileRes = await authService.getProfile();
+           const profileRes = await authService.getProfile(res.access_token);
+           console.log("Profile response:", profileRes);
            setUserProfile(profileRes);
+           
+           // Role-based redirection
+           if (profileRes.role === 'ADMIN') {
+             router.push('/admin');
+           }
         } catch (e) {
-           console.error("Failed to fetch profile");
+           console.error("Failed to fetch profile", e);
         }
         onClose();
       } else {
