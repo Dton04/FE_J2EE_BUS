@@ -25,6 +25,25 @@ export default function LoginModal({ onClose, onSwitchToRegister }: { onClose: (
     resolver: zodResolver(loginSchema),
   });
 
+  function getErrorMessage(err: unknown, fallback = 'Đăng nhập thất bại') {
+    if (!err) return fallback;
+    if (typeof err === 'string') return err;
+    if (err instanceof Error) return err.message;
+    if (typeof err === 'object') {
+      const obj = err as Record<string, unknown>;
+      const resp = obj.response as Record<string, unknown> | undefined;
+      const dataMsg = resp?.data as Record<string, unknown> | undefined;
+      const message = dataMsg?.message ?? obj['message'];
+      if (typeof message === 'string') return message;
+      try {
+        return JSON.stringify(err);
+      } catch {
+        return fallback;
+      }
+    }
+    return String(err);
+  }
+
   const onSubmit = async (data: LoginForm) => {
     setErrorMsg('');
     console.log("Attempting login with:", data);
@@ -32,22 +51,24 @@ export default function LoginModal({ onClose, onSwitchToRegister }: { onClose: (
       const res = await authService.login(data);
       console.log("Login response:", res);
       
-      if (res.access_token) {
-        setTokens(res.access_token, res.refresh_token);
+      const accessToken = res.access_token;
+      if (accessToken) {
+        setTokens(accessToken, res.refresh_token ?? null);
         // fetch profile after login
-        try {
-           const profileRes = await authService.getProfile();
-           setUserProfile(profileRes);
-        } catch (e) {
-           console.error("Failed to fetch profile");
-        }
+          try {
+            const profileRes = await authService.getProfile();
+            setUserProfile(profileRes);
+          } catch {
+            console.error('Failed to fetch profile');
+          }
         onClose();
       } else {
         setErrorMsg('Đăng nhập không trả về token. Vui lòng kiểm tra lại backend.');
       }
-    } catch (err: any) {
-      console.error("Login Error:", err);
-      const detail = err.response?.data?.message || err.message || 'Đăng nhập thất bại';
+    } catch (err: unknown) {
+       
+      console.error('Login Error:', err);
+      const detail = getErrorMessage(err, 'Đăng nhập thất bại');
       setErrorMsg(`Lỗi: ${detail}`);
     }
   };

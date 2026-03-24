@@ -13,7 +13,9 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    // schedule setMounted to avoid synchronous state update in effect
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
   }, []);
 
   if (!mounted) {
@@ -44,15 +46,29 @@ export default function Header() {
           </div>
           
           <div className="flex items-center gap-4">
-            <button className="flex items-center gap-1 hover:bg-white/10 p-2 rounded-full transition"><Globe size={18} /></button>
-            <button className="flex items-center gap-1 hover:bg-white/10 p-2 rounded-full transition"><Headphones size={18} /></button>
+            <button
+              type="button"
+              aria-label="Ngôn ngữ"
+              title="Ngôn ngữ"
+              className="flex items-center gap-1 hover:bg-white/10 p-2 rounded-full transition"
+            >
+              <Globe size={18} />
+            </button>
+            <button
+              type="button"
+              aria-label="Hỗ trợ"
+              title="Hỗ trợ"
+              className="flex items-center gap-1 hover:bg-white/10 p-2 rounded-full transition"
+            >
+              <Headphones size={18} />
+            </button>
             <button className="flex items-center gap-1 font-medium bg-white/10 px-3 py-1.5 rounded-full hover:bg-white/20 transition hidden sm:flex">
               Hotline 24/7
             </button>
             
             {isAuthenticated ? (
               <div className="flex items-center gap-2 bg-white text-blue-600 px-4 py-1.5 rounded-full font-medium cursor-pointer">
-                <User size={18} /> {userProfile?.full_name || 'Tài khoản'}
+                <User size={18} /> {typeof userProfile?.full_name === 'string' ? userProfile.full_name : 'Tài khoản'}
                 <button onClick={() => logout()} className="ml-2 text-xs text-gray-500 hover:text-red-500">Đăng xuất</button>
               </div>
             ) : (

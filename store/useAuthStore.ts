@@ -1,13 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export type UserProfile = {
+  full_name?: string;
+  [key: string]: unknown;
+};
+
 interface AuthState {
   isAuthenticated: boolean;
   token: string | null;
   refreshToken: string | null;
-  userProfile: any | null;
-  setTokens: (token: string, refreshToken: string) => void;
-  setUserProfile: (profile: any) => void;
+  userProfile: UserProfile | null;
+  setTokens: (token: string, refreshToken: string | null) => void;
+  setUserProfile: (profile: UserProfile | null) => void;
   logout: () => void;
 }
 

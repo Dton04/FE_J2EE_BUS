@@ -1,3 +1,4 @@
+
 import SearchBanner from '../components/home/SearchBanner';
 
 export default function Home() {
