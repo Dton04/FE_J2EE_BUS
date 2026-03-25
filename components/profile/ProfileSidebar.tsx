@@ -1,7 +1,7 @@
 'use client';
 import { 
   UserCircle, Star, FileText, Tag, Gift, CreditCard, 
-  Edit3, HelpCircle, MessageSquare, Briefcase, LogOut 
+  Edit3, HelpCircle, MessageSquare, Briefcase, LogOut, Lock
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -20,6 +20,7 @@ export default function ProfileSidebar() {
     { id: 'support', label: 'Trung tâm Hỗ trợ', icon: HelpCircle, badge: 'Mới', href: '#' },
     { id: 'feedback', label: 'Góp ý', icon: MessageSquare, href: '#' },
     { id: 'careers', label: 'Vexere tuyển dụng', icon: Briefcase, href: '#' },
+    { id: 'change-password', label: 'Đổi mật khẩu', icon: Lock, href: '/profile/change-password' },
     { id: 'logout', label: 'Đăng xuất', icon: LogOut, href: '#' },
   ];
 
