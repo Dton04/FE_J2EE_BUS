@@ -45,7 +45,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] gap-4">
         <Loader2 className="animate-spin text-blue-600" size={40} />
         <p className="text-gray-500 font-medium">
-          {!hasHydrated || isChecking ? 'Đang xác thực quyền truy cập...' : 'Đang chuyển hướng...'}
+          {!isMounted || isChecking ? 'Đang xác thực quyền truy cập...' : 'Đang chuyển hướng...'}
         </p>
       </div>
     );
