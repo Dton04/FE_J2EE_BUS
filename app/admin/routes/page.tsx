@@ -73,10 +73,19 @@ export default function AdminRoutesPage() {
     }
   };
 
-  const filteredRoutes = routes.filter(r => 
-    (r.departure || r.origin_station?.city || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (r.destination || r.destination_station?.city || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredRoutes = routes.filter(r => {
+    const search = searchTerm.trim().toLowerCase();
+    if (!search) return true;
+    
+    return (
+      (r.departure || '').toLowerCase().includes(search) ||
+      (r.destination || '').toLowerCase().includes(search) ||
+      (r.origin_station?.city || '').toLowerCase().includes(search) ||
+      (r.origin_station?.name || '').toLowerCase().includes(search) ||
+      (r.destination_station?.city || '').toLowerCase().includes(search) ||
+      (r.destination_station?.name || '').toLowerCase().includes(search)
+    );
+  });
 
   const formatPrice = (price?: number) => {
     if (price === undefined) return '0đ';
