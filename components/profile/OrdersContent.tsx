@@ -1,13 +1,15 @@
 'use client';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { bookingService, type MyBookingResponse } from '@/services/bookingService';
+import { Ticket, Calendar, MapPin, CheckCircle2, XCircle, Clock, CreditCard } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
+import { bookingService, type MyBookingResponse } from '@/services/bookingService';
 
 export default function OrdersContent() {
-  const [activeTab, setActiveTab] = useState('Hiện tại');
-  const { isAuthenticated } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(false);
+  // 2 Tabs: UPCOMING (Sắp đi), HISTORY (Lịch sử)
+  const [activeTab, setActiveTab] = useState<'UPCOMING' | 'HISTORY'>('UPCOMING');
+  const authStore = useAuthStore();
+  const [isMounted, setIsMounted] = useState(false);
   const [items, setItems] = useState<MyBookingResponse[]>([]);
   const [error, setError] = useState<string>('');
   const [cancelingOrderId, setCancelingOrderId] = useState<number | null>(null);
@@ -70,11 +72,10 @@ export default function OrdersContent() {
     }
   };
 
-  const formatPrice = (value: number) => value.toLocaleString('vi-VN') + 'đ';
   const formatTime = (iso: string | null) => {
     if (!iso) return '—';
     const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return '—';
+    if (Number.isNaN(d.getTime())) return iso; // hiển thị đúng chuỗi ban đầu nếu parse lỗi
     return d.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
@@ -93,87 +94,134 @@ export default function OrdersContent() {
   };
   
   return (
-    <div className="flex-1 w-full">
-      <div className="bg-white rounded-xl shadow-sm flex overflow-hidden">
-        {['Hiện tại', 'Đã đi', 'Đã hủy'].map((tab) => (
+    <div className="flex-1 w-full flex flex-col gap-6">
+      {/* Header & Tabs */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col sm:flex-row items-center justify-between p-2">
+        <div className="flex w-full sm:w-auto p-1 bg-gray-50 rounded-xl">
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 text-center py-4 text-[15px] font-medium border-b-2 transition ${
-              activeTab === tab
-                ? 'border-[#2474E5] text-[#2474E5]'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200'
+            onClick={() => setActiveTab('UPCOMING')}
+            className={`flex-1 sm:px-8 py-2.5 rounded-lg text-sm font-bold transition-all ${
+              activeTab === 'UPCOMING'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            {tab}
+            Sắp đi
           </button>
-        ))}
+          <button
+            onClick={() => setActiveTab('HISTORY')}
+            className={`flex-1 sm:px-8 py-2.5 rounded-lg text-sm font-bold transition-all ${
+              activeTab === 'HISTORY'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Lịch sử chuyến
+          </button>
+        </div>
       </div>
       
-      <div className="pt-6 px-1">
-        {!isAuthenticated ? (
-          <div className="bg-white border border-gray-100 p-8 rounded-xl text-center shadow-sm">
-            <div className="text-gray-700 font-semibold mb-2">Bạn cần đăng nhập để xem đơn hàng.</div>
-            <div className="text-gray-500 text-sm mb-4">Vui lòng đăng nhập rồi quay lại trang này.</div>
-            <Link href="/" className="text-[#2474E5] hover:underline font-medium">
-              Về trang chủ
-            </Link>
-          </div>
-        ) : isLoading ? (
-          <div className="bg-white border border-gray-100 p-10 rounded-xl text-center shadow-sm">
-            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <div className="text-gray-500 font-medium">Đang tải đơn hàng...</div>
+      {/* Content List */}
+      <div className="flex flex-col gap-4">
+        {isLoading ? (
+          <div className="bg-white border border-gray-100 p-12 rounded-2xl text-center shadow-sm flex flex-col items-center justify-center min-h-[300px]">
+             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
+             <p className="text-gray-500 font-medium">Đang tải danh sách chuyến đi...</p>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-100 text-red-700 p-6 rounded-xl text-center font-medium">
-            {error}
+          <div className="bg-red-50 border border-red-100 p-12 rounded-2xl text-center flex flex-col items-center justify-center min-h-[300px]">
+             <XCircle size={40} className="text-red-500 mb-3" />
+             <p className="text-red-700 font-medium">{error}</p>
           </div>
-        ) : filteredItems.length === 0 ? (
-          <div className="bg-white border border-gray-100 p-8 rounded-xl text-center shadow-sm">
-            <div className="text-gray-700 font-semibold mb-2">
-              {activeTab === 'Đã hủy' ? 'Bạn không có đơn hàng đã hủy.' : 'Bạn chưa có đơn hàng phù hợp.'}
+        ) : items.length === 0 ? (
+          <div className="bg-white border border-gray-100 p-12 rounded-2xl text-center shadow-sm flex flex-col items-center justify-center min-h-[300px]">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+              <Ticket size={32} className="text-gray-400" />
             </div>
-            <div className="text-gray-500 text-sm mb-4">Bạn có thể đặt chuyến mới để tạo đơn hàng.</div>
-            <Link href="/" className="text-[#2474E5] hover:underline font-medium">
-              Đặt chuyến đi ngay
+            <h3 className="text-lg font-bold text-gray-800 mb-2">
+              {activeTab === 'UPCOMING' ? 'Bạn chưa có chuyến đi nào sắp tới' : 'Chưa có lịch sử chuyến đi'}
+            </h3>
+            <p className="text-gray-500 text-sm mb-6 max-w-sm">Khám phá hàng ngàn tuyến đường xe khách và đặt vé ngay hôm nay.</p>
+            <Link 
+              href="/" 
+              className="text-blue-600 bg-blue-50 hover:bg-blue-100 px-6 py-2.5 rounded-xl font-bold transition-colors"
+            >
+              Tìm chuyến đi ngay
             </Link>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {filteredItems.map((b) => (
-              <div key={b.booking_id} className="bg-white border border-gray-100 rounded-xl shadow-sm p-4 flex flex-col gap-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="text-[15px] font-bold text-gray-900 truncate">
-                      {b.route_name || 'Tuyến chưa xác định'}
-                    </div>
-                    <div className="text-[13px] text-gray-500 mt-1">
-                      Mã đơn: <span className="font-semibold text-gray-700">{b.booking_code}</span>
-                    </div>
-                  </div>
-                  <span className={`shrink-0 text-[12px] font-bold border px-3 py-1 rounded-full ${statusBadge(b.status)}`}>
-                    {b.status}
-                  </span>
-                </div>
+          items.map((booking) => {
+            const statusInfo = getStatusDisplay(booking.status);
+            const StatusIcon = statusInfo.icon;
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[13px] text-gray-600">
-                  <div>
-                    <div className="text-gray-400">Giờ khởi hành</div>
-                    <div className="font-semibold text-gray-800">{formatTime(b.departure_time)}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-400">Số ghế</div>
-                    <div className="font-semibold text-gray-800">{b.seat_count}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-400">Tổng tiền</div>
-                    <div className="font-semibold text-gray-800">{formatPrice(b.total_amount)}</div>
-                  </div>
-                </div>
+            return (
+              <Link 
+                href={`/profile/orders/${booking.booking_id}`}
+                key={booking.booking_id} 
+                className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow group relative block cursor-pointer"
+              >
+                {/* Ribbon trang trí */}
+                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
 
-                <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100">
-                  <div className="text-[13px] text-gray-600">
-                    Thanh toán: <span className="font-semibold text-gray-800">{b.payment_status}</span>
+                <div className="p-5 pl-7">
+                  {/* Card Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded text-xs font-bold font-mono tracking-wider">
+                        #{booking.booking_code}
+                      </span>
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${statusInfo.color}`}>
+                        <StatusIcon size={14} />
+                        {statusInfo.label}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+                    
+                    {/* Route Info */}
+                    <div className="flex-1 space-y-3">
+                      <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <MapPin className="text-blue-500" size={20} />
+                        {booking.route_name}
+                      </h3>
+                      
+                      {booking.departure_time && (
+                        <div className="flex items-center gap-2 text-gray-600 font-medium">
+                          <Calendar size={16} className="text-gray-400" />
+                          {formatTime(booking.departure_time)}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Booking Stats */}
+                    <div className="flex flex-col gap-3 md:items-end justify-center bg-gray-50/50 p-4 rounded-xl border border-gray-100 min-w-[200px]">
+                      {booking.seat_count && (
+                        <div className="flex items-center justify-between w-full gap-4 text-sm">
+                          <span className="text-gray-500">Số lượng ghế:</span>
+                          <span className="font-bold text-gray-800">{booking.seat_count}</span>
+                        </div>
+                      )}
+                      
+                      {booking.total_amount && (
+                        <div className="flex items-center justify-between w-full gap-4 text-sm">
+                          <span className="text-gray-500">Tổng tiền:</span>
+                          <span className="font-bold text-blue-600 text-lg">
+                            {booking.total_amount.toLocaleString('vi-VN')} đ
+                          </span>
+                        </div>
+                      )}
+
+                      {booking.payment_status && (
+                        <div className="flex items-center justify-between w-full gap-4 text-sm border-t border-gray-200 pt-2 mt-1">
+                          <span className="text-gray-500 flex items-center gap-1">
+                            <CreditCard size={14}/> Thanh toán:
+                          </span>
+                          {getPaymentDisplay(booking.payment_status)}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   {canCancelStatus(b.status) && (
                     <button
@@ -185,9 +233,9 @@ export default function OrdersContent() {
                     </button>
                   )}
                 </div>
-              </div>
-            ))}
-          </div>
+              </Link>
+            );
+          })
         )}
       </div>
     </div>

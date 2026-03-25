@@ -1,12 +1,13 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { 
   Plus, 
   Search, 
   Filter, 
   Edit2, 
   Trash2, 
-  ExternalLink,
+  Users,
   ChevronLeft,
   ChevronRight,
   Loader2
@@ -184,15 +185,20 @@ export default function AdminTripsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/admin/trips/${trip.id}/passengers`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-200"
+                          title="Xem danh sách hành khách"
+                        >
+                          <Users size={14} />
+                          Hành khách
+                        </Link>
                         <button className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Sửa">
                           <Edit2 size={16} />
                         </button>
                         <button className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Xóa">
                           <Trash2 size={16} />
-                        </button>
-                        <button className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors" title="Chi tiết">
-                          <ExternalLink size={16} />
                         </button>
                       </div>
                     </td>
