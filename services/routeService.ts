@@ -19,6 +19,9 @@ export interface RouteResponse {
   duration: number;
   price?: number;
   base_price?: number;
+  departure_date?: string;
+  distance_km?: number;
+  estimated_duration?: number;
   origin_station?: {
     id: number;
     name: string;
