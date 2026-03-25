@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
 export const api = axios.create({
@@ -7,6 +7,15 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+type RetryableRequestConfig = AxiosRequestConfig & { _retry?: boolean };
+
+let refreshPromise: Promise<string> | null = null;
+
+const isRefreshRequest = (config?: AxiosRequestConfig) => {
+  const url = config?.url || '';
+  return url.includes('/auth/refresh');
+};
 
 api.interceptors.request.use(
   (config) => {
@@ -21,33 +30,59 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    // Handle token refresh on 401 Unauthorized
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const refreshToken = useAuthStore.getState().refreshToken;
-        if (!refreshToken) {
-            throw new Error("No refresh token");
-        }
-        
-        const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {
-          refresh_token: refreshToken
-        });
-        
-        const newAccessToken = res.data.access_token;
-        const newRefreshToken = res.data.refresh_token || refreshToken;
-        
-        useAuthStore.getState().setTokens(newAccessToken, newRefreshToken);
-        
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return api(originalRequest);
-      } catch (err) {
-        useAuthStore.getState().logout();
-        return Promise.reject(err);
-      }
+  async (error: unknown) => {
+    const axiosError = error as AxiosError;
+    const originalRequest = axiosError.config as RetryableRequestConfig | undefined;
+    const status = axiosError.response?.status;
+
+    if (status !== 401 || !originalRequest) {
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
+
+    if (originalRequest._retry || isRefreshRequest(originalRequest)) {
+      return Promise.reject(error);
+    }
+
+    originalRequest._retry = true;
+
+    const refreshToken = useAuthStore.getState().refreshToken;
+    if (!refreshToken) {
+      useAuthStore.getState().logout();
+      return Promise.reject(error);
+    }
+
+    const extractAccessToken = (data: unknown): string | null => {
+      if (!data || typeof data !== 'object') return null;
+      const record = data as Record<string, unknown>;
+      return typeof record.access_token === 'string' ? record.access_token : null;
+    };
+
+    try {
+      if (!refreshPromise) {
+        refreshPromise = axios
+          .post(`${api.defaults.baseURL}/auth/refresh`, {
+            refresh_token: refreshToken,
+          })
+          .then((res) => {
+            const newAccessToken = extractAccessToken(res.data);
+            if (!newAccessToken) {
+              throw new Error('Refresh token response missing access_token');
+            }
+            useAuthStore.getState().setTokens(newAccessToken, refreshToken);
+            return newAccessToken;
+          })
+          .finally(() => {
+            refreshPromise = null;
+          });
+      }
+
+      const newAccessToken = await refreshPromise;
+      originalRequest.headers = originalRequest.headers || {};
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+      return api(originalRequest);
+    } catch (refreshError) {
+      useAuthStore.getState().logout();
+      return Promise.reject(refreshError);
+    }
   }
 );

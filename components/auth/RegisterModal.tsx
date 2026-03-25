@@ -36,9 +36,14 @@ export default function RegisterModal({ onClose, onSwitchToLogin }: { onClose: (
       setTimeout(() => {
         onSwitchToLogin();
       }, 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Register Error:", err);
-      const detail = err.response?.data?.message || err.message || 'Đăng ký thất bại';
+      const responseMessage =
+        typeof (err as { response?: { data?: { message?: unknown } } })?.response?.data?.message === 'string'
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+      const fallbackMessage = typeof (err as { message?: unknown })?.message === 'string' ? (err as { message?: string }).message : null;
+      const detail = responseMessage || fallbackMessage || 'Đăng ký thất bại';
       setErrorMsg(`Lỗi: ${detail}`);
     }
   };

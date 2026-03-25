@@ -53,9 +53,14 @@ export default function LoginModal({ onClose, onSwitchToRegister }: { onClose: (
       } else {
         setErrorMsg('Đăng nhập không trả về token. Vui lòng kiểm tra lại backend.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Login Error:", err);
-      const detail = err.response?.data?.message || err.message || 'Đăng nhập thất bại';
+      const responseMessage =
+        typeof (err as { response?: { data?: { message?: unknown } } })?.response?.data?.message === 'string'
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+      const fallbackMessage = typeof (err as { message?: unknown })?.message === 'string' ? (err as { message?: string }).message : null;
+      const detail = responseMessage || fallbackMessage || 'Đăng nhập thất bại';
       setErrorMsg(`Lỗi: ${detail}`);
     }
   };

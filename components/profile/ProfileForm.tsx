@@ -7,6 +7,8 @@ import { authService } from '@/services/authService';
 export default function ProfileForm() {
   const { setUserProfile } = useAuthStore();
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -33,6 +35,34 @@ export default function ProfileForm() {
     fetchProfile();
   }, [setUserProfile]);
 
+  const handleSave = async () => {
+    setMessage(null);
+    setIsSaving(true);
+    try {
+      const updated = await authService.updateProfile({
+        full_name: fullName,
+        phone,
+      });
+      const refreshed = {
+        ...updated,
+        phone: updated.phone || updated.phone_number || phone,
+        phone_number: updated.phone_number || updated.phone || phone,
+      };
+      setUserProfile(refreshed);
+      setFullName(refreshed.full_name || fullName);
+      setPhone(refreshed.phone || phone);
+      setMessage({ type: 'success', text: 'Cập nhật hồ sơ thành công.' });
+    } catch (error: unknown) {
+      const responseMessage =
+        typeof (error as { response?: { data?: { message?: unknown } } })?.response?.data?.message === 'string'
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+      setMessage({ type: 'error', text: responseMessage || 'Không thể cập nhật hồ sơ. Vui lòng thử lại.' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex-1 bg-white rounded-xl shadow-sm p-12 flex flex-col items-center justify-center gap-4">
@@ -45,6 +75,17 @@ export default function ProfileForm() {
   return (
     <div className="flex-1 bg-white rounded-xl shadow-sm p-6 lg:p-8">
       <div className="max-w-3xl flex flex-col gap-6">
+        {message && (
+          <div
+            className={`rounded-lg px-4 py-3 text-[14px] font-medium ${
+              message.type === 'success'
+                ? 'bg-green-50 text-green-700 border border-green-100'
+                : 'bg-red-50 text-red-700 border border-red-100'
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
         
         {/* Họ và tên */}
         <div className="flex flex-col gap-1.5">
@@ -62,14 +103,15 @@ export default function ProfileForm() {
 
         {/* Số điện thoại */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[14px] text-gray-600">Số điện thoại</label>
+          <label className="text-[14px] text-gray-600">
+            Số điện thoại<span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="Chưa có số điện thoại"
-            disabled
-            className="w-full border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 text-[15px] text-gray-600 outline-none cursor-not-allowed"
+            placeholder="Nhập số điện thoại"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-[15px] focus:outline-none focus:border-[#2474E5] focus:ring-1 focus:ring-[#2474E5] transition"
           />
         </div>
 
@@ -113,10 +155,15 @@ export default function ProfileForm() {
         {/* Lưu Button */}
         <div className="mt-8">
           <button 
-            disabled
-            className="w-full bg-[#f2f2f2] text-gray-400 font-semibold py-3 rounded-lg text-[15px] cursor-not-allowed"
+            onClick={handleSave}
+            disabled={isSaving || !fullName.trim() || !phone.trim()}
+            className={`w-full font-semibold py-3 rounded-lg text-[15px] transition ${
+              isSaving || !fullName.trim() || !phone.trim()
+                ? 'bg-[#f2f2f2] text-gray-400 cursor-not-allowed'
+                : 'bg-[#2474E5] text-white hover:bg-blue-700'
+            }`}
           >
-            Lưu
+            {isSaving ? 'Đang lưu...' : 'Lưu'}
           </button>
         </div>
 

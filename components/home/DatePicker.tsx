@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, ToggleLeft, ToggleRight } from 'lucide-react';
 
@@ -127,9 +127,6 @@ export default function DatePicker({
   const [showLunar, setShowLunar] = useState(true);
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
   const [selecting, setSelecting] = useState<'depart' | 'return'>(mode);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
 
   const nextMonth = {
     year:  viewMonth.month === 11 ? viewMonth.year + 1 : viewMonth.year,
@@ -251,6 +248,7 @@ export default function DatePicker({
     </div>
   );
 
-  if (!mounted) return null;
-  return createPortal(content, document.body);
+  const portalTarget = typeof document !== 'undefined' ? document.body : null;
+  if (!portalTarget) return null;
+  return createPortal(content, portalTarget);
 }
