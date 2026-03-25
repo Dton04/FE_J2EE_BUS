@@ -25,6 +25,14 @@ interface AdminTrip {
   status?: string;
 }
 
+interface BackendTrip {
+  id: number;
+  route_name?: string;
+  bus_plate?: string;
+  departure_time?: string;
+  actual_price?: number | string;
+}
+
 export default function AdminTripsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,8 +42,44 @@ export default function AdminTripsPage() {
   const fetchTrips = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await tripService.getAllTrips();
-      setTrips(data || []);
+      const data = (await tripService.getAllTrips()) as unknown;
+      const list = Array.isArray(data) ? (data as BackendTrip[]) : [];
+
+      const formatPrice = (value: unknown) => {
+        const n =
+          typeof value === 'number'
+            ? value
+            : typeof value === 'string' && /^\d+(\.\d+)?$/.test(value.trim())
+              ? Number(value)
+              : null;
+        if (n == null) return '—';
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
+      };
+
+      const mapped: AdminTrip[] = list.map((t) => {
+        const dt = t.departure_time ? new Date(t.departure_time) : null;
+        const time =
+          dt && !Number.isNaN(dt.getTime())
+            ? dt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false })
+            : '—';
+        const date =
+          dt && !Number.isNaN(dt.getTime())
+            ? dt.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            : '—';
+
+        return {
+          id: t.id,
+          operator: t.bus_plate || '—',
+          route: t.route_name || '—',
+          time,
+          date,
+          price: formatPrice(t.actual_price),
+          seats: '—',
+          status: 'Sắp khởi hành',
+        };
+      });
+
+      setTrips(mapped);
     } catch (error) {
       console.error('Failed to fetch trips:', error);
     } finally {

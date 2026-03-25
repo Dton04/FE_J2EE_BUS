@@ -3,15 +3,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { 
   Plus, 
   Search, 
-  MoreVertical, 
   Edit2, 
   Trash2, 
   Route as RouteIcon,
-  MapPin,
   Clock,
   ArrowRight,
-  Loader2,
-  AlertCircle
+  Loader2
 } from 'lucide-react';
 import { routeService, RouteResponse } from '@/services/routeService';
 import CreateEditRouteModal from '@/components/admin/CreateEditRouteModal';
@@ -34,7 +31,11 @@ export default function AdminRoutesPage() {
       if (Array.isArray(data)) {
         routesList = data;
       } else if (data && typeof data === 'object') {
-        routesList = (data as any).content || (data as any).routes || (data as any).data || [];
+        const record = data as Record<string, unknown>;
+        const content = record.content;
+        const routes = record.routes;
+        const nestedData = record.data;
+        routesList = (Array.isArray(content) ? content : Array.isArray(routes) ? routes : Array.isArray(nestedData) ? nestedData : []) as RouteResponse[];
       }
       
       console.log('Processed routes list:', routesList);
@@ -64,7 +65,7 @@ export default function AdminRoutesPage() {
       try {
         await routeService.deleteRoute(id);
         fetchRoutes();
-      } catch (error) {
+      } catch {
         alert('Không thể xóa tuyến đường này vì có thể đang có chuyến xe hoạt động.');
       }
     }

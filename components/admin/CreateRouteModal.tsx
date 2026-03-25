@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { X, DollarSign, Loader2 } from 'lucide-react';
 import { tripService } from '@/services/tripService';
 import { routeService } from '@/services/routeService';
+import { busService, type BusResponse } from '@/services/busService';
 
 interface CreateRouteModalProps {
   isOpen: boolean;
@@ -19,10 +20,7 @@ interface TripFormData {
 
 interface RouteItem {
   id: number;
-  origin?: string;
-  destination?: string;
-  origin_station?: { name?: string };
-  destination_station?: { name?: string };
+  name?: string;
 }
 
 export default function CreateRouteModal({ isOpen, onClose, onSuccess }: CreateRouteModalProps) {
@@ -33,14 +31,21 @@ export default function CreateRouteModal({ isOpen, onClose, onSuccess }: CreateR
     price_modifier: 0,
   });
   const [routes, setRoutes] = useState<RouteItem[]>([]);
+  const [buses, setBuses] = useState<BusResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
-      routeService.getAllRoutes()
-        .then(data => setRoutes(data || []))
-        .catch(() => setRoutes([]));
+      Promise.all([routeService.getAllRoutes(), busService.getAllBuses()])
+        .then(([routeData, busData]) => {
+          setRoutes((routeData || []) as RouteItem[]);
+          setBuses(busData || []);
+        })
+        .catch(() => {
+          setRoutes([]);
+          setBuses([]);
+        });
     }
   }, [isOpen]);
 
@@ -99,24 +104,25 @@ export default function CreateRouteModal({ isOpen, onClose, onSuccess }: CreateR
 
           {/* Route ID */}
           <div className="space-y-1.5">
-            <label htmlFor="fromStation" className="block text-sm font-medium text-gray-700 mb-1">Điểm đi</label>
+            <label htmlFor="routeId" className="block text-sm font-medium text-gray-700 mb-1">Lộ trình</label>
             {routes.length > 0 ? (
               <select
-                id="fromStation"
-                title="Select Departure Station"
+                id="routeId"
+                title="Select Route"
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-blue-400 transition text-sm"
                 value={formData.route_id}
                 onChange={(e) => setFormData({ ...formData, route_id: e.target.value ? Number(e.target.value) : '' })}
               >
                 <option value="">-- Chọn lộ trình --</option>
                 {routes.map((route) => (
                   <option key={route.id} value={route.id}>
-                    [{route.id}] {route.origin_station?.name || route.origin} → {route.destination_station?.name || route.destination}
+                    [{route.id}] {route.name || `Route ${route.id}`}
                   </option>
                 ))}
               </select>
             ) : (
               <input
-                id="fromStation"
+                id="routeId"
                 required
                 type="number"
                 min="1"
@@ -130,17 +136,18 @@ export default function CreateRouteModal({ isOpen, onClose, onSuccess }: CreateR
 
           {/* Bus ID */}
           <div className="space-y-1.5">
-            <label htmlFor="toStation" className="block text-sm font-medium text-gray-700 mb-1">Điểm đến</label>
+            <label htmlFor="busId" className="block text-sm font-medium text-gray-700 mb-1">Xe</label>
             <select
-              id="toStation"
-              title="Select Arrival Station"
+              id="busId"
+              title="Select Bus"
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-blue-400 transition text-sm"
               value={formData.bus_id}
               onChange={(e) => setFormData({ ...formData, bus_id: e.target.value ? Number(e.target.value) : '' })}
             >
-              <option value="">-- Chọn xe buýt --</option>
-              {routes.map((route) => (
-                <option key={route.id} value={route.id}>
-                  [{route.id}] {route.origin_station?.name || route.origin} → {route.destination_station?.name || route.destination}
+              <option value="">-- Chọn xe --</option>
+              {buses.map((bus) => (
+                <option key={bus.id} value={bus.id}>
+                  [{bus.id}] {bus.license_plate} • {bus.total_seats} ghế
                 </option>
               ))}
             </select>
@@ -148,11 +155,12 @@ export default function CreateRouteModal({ isOpen, onClose, onSuccess }: CreateR
 
           {/* Departure time */}
           <div className="space-y-1.5">
-            <label htmlFor="distance" className="block text-sm font-medium text-gray-700 mb-1">Khoảng cách (km)</label>
+            <label htmlFor="departureTime" className="block text-sm font-medium text-gray-700 mb-1">Giờ khởi hành</label>
             <input
-              id="distance"
-              type="number"
-              placeholder="e.g., 300"
+              id="departureTime"
+              type="datetime-local"
+              title="Departure Time"
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-blue-400 transition text-sm"
               value={formData.departure_time}
               onChange={(e) => setFormData({ ...formData, departure_time: e.target.value })}
             />

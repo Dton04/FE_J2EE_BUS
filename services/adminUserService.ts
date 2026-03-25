@@ -18,11 +18,11 @@ export interface CreateStaffResponse {
 
 export interface StaffResponse {
   id: number;
-  fullName: string;
+  fullName?: string;
   email: string;
-  phone: string;
-  role: string;
-  locked: boolean;
+  phone?: string;
+  role?: string;
+  locked?: boolean;
   bookingsCount?: number;
 }
 

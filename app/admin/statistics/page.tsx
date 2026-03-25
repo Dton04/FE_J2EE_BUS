@@ -9,9 +9,7 @@ import {
   Calendar,
   ArrowUpRight,
   ArrowDownRight,
-  Download,
-  Filter,
-  PieChart as PieChartIcon
+  Download
 } from 'lucide-react';
 
 export default function AdminStatisticsPage() {
