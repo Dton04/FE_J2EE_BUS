@@ -154,9 +154,10 @@ export default function OrdersContent() {
             const StatusIcon = statusInfo.icon;
 
             return (
-              <div 
+              <Link 
+                href={`/profile/orders/${booking.booking_id}`}
                 key={booking.booking_id} 
-                className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow group relative"
+                className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow group relative block cursor-pointer"
               >
                 {/* Ribbon trang trí */}
                 <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
@@ -222,7 +223,7 @@ export default function OrdersContent() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })
         )}

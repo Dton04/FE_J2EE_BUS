@@ -30,6 +30,34 @@ export interface MyBookingResponse {
   payment_status: string;
 }
 
+export interface BookingTicketItem {
+  seat: string;
+  passenger: string;
+}
+
+export interface BookingDetailResponse {
+  booking_info: {
+    booking_code: string;
+    status: string;
+    created_at: string;
+  };
+  trip_info: {
+    route: string;
+    bus_plate: string;
+    bus_type: string;
+    departure: string;
+    pickup_point: string;
+  };
+  tickets: BookingTicketItem[];
+  payment: {
+    method: string;
+    total: number;
+    status: string;
+  };
+  qr_string: string;
+  policies: string;
+}
+
 const unwrapData = <T>(payload: unknown): T => {
   if (payload && typeof payload === 'object' && 'data' in (payload as Record<string, unknown>)) {
     return (payload as { data: T }).data;
@@ -46,6 +74,11 @@ export const bookingService = {
   getMyBookings: async (type: 'UPCOMING' | 'HISTORY' | 'HOLDING' | 'PENDING_PAYMENT' | 'ALL' = 'UPCOMING') => {
     const response = await api.get('/me/bookings', { params: { type } });
     return unwrapData<MyBookingResponse[]>(response.data);
+  },
+
+  getBookingDetail: async (bookingId: number | string) => {
+    const response = await api.get(`/bookings/${bookingId}`);
+    return unwrapData<BookingDetailResponse>(response.data);
   },
 
   cancelBooking: async (bookingId: number) => {
