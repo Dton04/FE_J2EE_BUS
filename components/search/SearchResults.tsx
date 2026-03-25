@@ -23,11 +23,9 @@ const LOCATION_MAP: Record<string, number> = {
   'Cần Thơ': 7,
 };
 
-
-
 export default function SearchResults() {
   const searchParams = useSearchParams();
-  const [trips, setTrips] = useState<any[]>([]);
+  const [trips, setTrips] = useState<TripCardItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -50,39 +48,93 @@ export default function SearchResults() {
 
         const data = await tripService.searchTrips(originId, destinationId, dateStr);
         
-        // Map backend DTO to frontend TripProps format
-        const mappedTrips = (data || []).map((t: any, idx: number) => {
+        const formatTime = (iso?: string) => {
+          if (!iso) return '';
+          const d = new Date(iso);
+          if (Number.isNaN(d.getTime())) return '';
+          return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+        };
+
+        const formatDuration = (start?: string, end?: string) => {
+          if (!start || !end) return '';
+          const s = new Date(start);
+          const e = new Date(end);
+          if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return '';
+          const totalMinutes = Math.max(0, Math.round((e.getTime() - s.getTime()) / 60000));
+          const hours = Math.floor(totalMinutes / 60);
+          const minutes = totalMinutes % 60;
+          if (hours === 0) return `${minutes}m`;
+          return `${hours}h${String(minutes).padStart(2, '0')}m`;
+        };
+
+        const toNumber = (value: unknown): number | null => {
+          if (typeof value === 'number' && Number.isFinite(value)) return value;
+          if (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value.trim())) return Number(value);
+          return null;
+        };
+
+        const toString = (value: unknown): string | null => (typeof value === 'string' ? value : null);
+
+        const items = Array.isArray(data) ? data : [];
+        const mappedTrips: TripCardItem[] = items.map((raw, idx) => {
+          const t = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+          const legsRaw = Array.isArray(t.legs) ? (t.legs as unknown[]) : [];
+          const firstLeg = (legsRaw[0] && typeof legsRaw[0] === 'object' ? legsRaw[0] : null) as Record<string, unknown> | null;
+          const lastLeg = (legsRaw.length > 0 && typeof legsRaw[legsRaw.length - 1] === 'object'
+            ? legsRaw[legsRaw.length - 1]
+            : null) as Record<string, unknown> | null;
+
           const backendTripId =
-            t?.id ??
-            t?.trip_id ??
-            t?.tripId ??
-            t?.trip?.id ??
-            t?.legs?.[0]?.trip_id ??
+            toNumber(firstLeg?.trip_id) ??
+            toNumber(firstLeg?.tripId) ??
+            toNumber(t.id) ??
+            toNumber(t.trip_id) ??
+            toNumber(t.tripId) ??
             null;
 
-          return {
-          id: backendTripId != null ? String(backendTripId) : `row-${idx + 1}`,
-          backendTripId,
-          image: t.image || `https://picsum.photos/seed/bus${t.id || idx}/400/400`,
-          operator: t.operatorName || t.bus?.operator?.name || 'Vexere Bus',
-          rating: t.rating || 4.5,
-          reviews: t.reviewCount || 100,
-          type: t.busType || t.bus?.type || 'Limousine giường nằm',
-          departTime: t.departureTime?.substring(0, 5) || '08:00',
-          departLocation: t.departureLocation || fromStr,
-          duration: t.duration || '6h00m',
-          arrivalTime: t.arrivalTime?.substring(0, 5) || '14:00',
-          arrivalLocation: t.arrivalLocation || toStr,
-          price: t.price || t.ticketPrice || 350000,
-          originalPrice: t.originalPrice,
-          discountNum: t.discountNum,
-          availableSeats: t.availableSeats ?? 20,
-          badges: t.badges || ['Xác nhận tức thì'],
-          promoText: t.promoText,
-        }});
+          const departureIso = toString(firstLeg?.departure) || null;
+          const arrivalIso = toString(lastLeg?.arrival) || null;
+
+          const totalPrice = toNumber(t.total_price) ?? toNumber(t.totalPrice) ?? 0;
+
+          const availableSeatCandidates = legsRaw
+            .map((leg) => {
+              const r = (leg && typeof leg === 'object' ? leg : {}) as Record<string, unknown>;
+              return toNumber(r.available_seats) ?? toNumber(r.availableSeats);
+            })
+            .filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
+
+          const minAvailable = availableSeatCandidates.length ? Math.min(...availableSeatCandidates) : 0;
+
+          const searchType = toString(t.type) || 'DIRECT';
+          const layover = toString(t.layover_time) || toString(t.layoverTime) || '';
+
+          const card: TripCardItem = {
+            id: backendTripId != null ? `${backendTripId}-${idx}` : `row-${idx + 1}`,
+            backendTripId,
+            searchType,
+            legs: legsRaw,
+            image: `https://picsum.photos/seed/bus${backendTripId || idx}/400/400`,
+            operator: 'Vexere Bus',
+            rating: 4.5,
+            reviews: 100,
+            type: toString(firstLeg?.bus_type) || toString(firstLeg?.busType) || 'Standard',
+            departTime: formatTime(departureIso || undefined) || '08:00',
+            departLocation: toString(firstLeg?.origin) || fromStr,
+            duration: formatDuration(departureIso || undefined, arrivalIso || undefined) || '6h00m',
+            arrivalTime: formatTime(arrivalIso || undefined) || '14:00',
+            arrivalLocation: toString(lastLeg?.destination) || toStr,
+            price: totalPrice || 350000,
+            availableSeats: minAvailable || 20,
+            badges: [searchType === 'CONNECTING' ? 'Chuyến nối' : 'Xác nhận tức thì'],
+            promoText: searchType === 'CONNECTING' ? `Chuyến nối • ${layover}`.trim() : undefined,
+          };
+
+          return card;
+        });
 
         setTrips(mappedTrips);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(err);
         setError('Có lỗi xảy ra khi tìm kiếm chuyến xe. Vui lòng thử lại sau.');
         setTrips([]);
@@ -142,4 +194,27 @@ export default function SearchResults() {
       </div>
     </div>
   );
+}
+
+interface TripCardItem {
+  id: string;
+  backendTripId?: number | string | null;
+  searchType?: string;
+  legs?: unknown[];
+  image: string;
+  operator: string;
+  rating: number;
+  reviews: number;
+  type: string;
+  departTime: string;
+  departLocation: string;
+  duration: string;
+  arrivalTime: string;
+  arrivalLocation: string;
+  price: number;
+  originalPrice?: number;
+  discountNum?: number;
+  availableSeats: number;
+  badges: string[];
+  promoText?: string;
 }

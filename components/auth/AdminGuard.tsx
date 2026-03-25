@@ -1,42 +1,54 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loader2 } from 'lucide-react';
+import { authService } from '@/services/authService';
 
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { userProfile, token } = useAuthStore();
-  // Start as null = "checking", true = ok, false = denied
-  const [authStatus, setAuthStatus] = useState<null | 'authorized' | 'denied'>(null);
+  const { userProfile, token, hasHydrated, setUserProfile, logout } = useAuthStore();
+  const isAuthorized = Boolean(token) && Boolean(userProfile) && userProfile?.role === 'ADMIN';
+  const isChecking = Boolean(token) && userProfile === null;
 
   useEffect(() => {
-    // Wait for Zustand persist hydration — both token and profile must be checked
-    // This effect runs client-side after hydration, so store values are real
+    if (!hasHydrated) {
+      return;
+    }
+
     if (!token) {
-      setAuthStatus('denied');
       router.replace('/');
       return;
     }
 
-    if (userProfile !== null) {
-      if (userProfile.role === 'ADMIN') {
-        setAuthStatus('authorized');
-      } else {
-        setAuthStatus('denied');
-        router.replace('/');
-      }
+    if (!userProfile) {
+      authService
+        .getProfile()
+        .then((profile) => {
+          setUserProfile(profile);
+          if (profile.role !== 'ADMIN') {
+            router.replace('/');
+          }
+        })
+        .catch(() => {
+          logout();
+          router.replace('/');
+        });
+      return;
     }
-    // If token exists but userProfile not yet in store → stay on loading
-    // This handles the case where login just ran but profile hasn't propagated
-  }, [userProfile, token, router]);
 
-  // While checking, show a loading spinner
-  if (authStatus !== 'authorized') {
+    if (userProfile && userProfile.role !== 'ADMIN') {
+      router.replace('/');
+    }
+  }, [userProfile, token, router, hasHydrated, setUserProfile, logout]);
+
+  if (!isAuthorized) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] gap-4">
         <Loader2 className="animate-spin text-blue-600" size={40} />
-        <p className="text-gray-500 font-medium">Đang xác thực quyền truy cập...</p>
+        <p className="text-gray-500 font-medium">
+          {!hasHydrated || isChecking ? 'Đang xác thực quyền truy cập...' : 'Đang chuyển hướng...'}
+        </p>
       </div>
     );
   }

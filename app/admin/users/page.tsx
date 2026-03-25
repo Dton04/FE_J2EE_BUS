@@ -23,6 +23,18 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+
+  const parseRoleFilter = (value: string): RoleFilter => {
+    if (value === 'CUSTOMER' || value === 'STAFF' || value === 'ALL') return value;
+    return 'ALL';
+  };
+
+  const parseStatusFilter = (value: string): StatusFilter => {
+    if (value === 'ACTIVE' || value === 'LOCKED' || value === 'ALL') return value;
+    return 'ALL';
+  };
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -43,9 +55,9 @@ export default function AdminUsersPage() {
   const handleToggleLock = async (user: StaffResponse) => {
     try {
       setActionLoading(user.id);
-      await adminUserService.updateUserLock(user.id, { locked: !user.locked });
+      await adminUserService.updateUserLock(user.id, { locked: !Boolean(user.locked) });
       // Update local state instead of refetching for better UX
-      setUsers(users.map(u => u.id === user.id ? { ...u, locked: !user.locked } : u));
+      setUsers(users.map(u => u.id === user.id ? { ...u, locked: !Boolean(user.locked) } : u));
     } catch (error) {
       console.error('Failed to toggle lock status:', error);
     } finally {
@@ -53,11 +65,24 @@ export default function AdminUsersPage() {
     }
   };
 
-  const filteredUsers = users.filter(user => 
-    user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.phone.includes(searchTerm)
-  );
+  const filteredUsers = users
+    .filter((user) => {
+      if (roleFilter === 'ALL') return true;
+      return user.role === roleFilter;
+    })
+    .filter((user) => {
+      if (statusFilter === 'ALL') return true;
+      if (statusFilter === 'ACTIVE') return !Boolean(user.locked);
+      return Boolean(user.locked);
+    })
+    .filter(user => {
+      const term = searchTerm.toLowerCase();
+      return (
+        (user.fullName || '').toLowerCase().includes(term) ||
+        (user.email || '').toLowerCase().includes(term) ||
+        (user.phone || '').includes(searchTerm)
+      );
+    });
 
   return (
     <div className="space-y-6">
@@ -91,10 +116,25 @@ export default function AdminUsersPage() {
             <Filter size={18} />
             Vai trò
           </button>
-          <select className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 outline-none hover:bg-gray-50 transition font-medium">
-            <option>Tất cả trạng thái</option>
-            <option>Hoạt động</option>
-            <option>Bị khóa</option>
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(parseRoleFilter(e.target.value))}
+            className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 outline-none hover:bg-gray-50 transition font-medium"
+            title="Role Filter"
+          >
+            <option value="ALL">Tất cả vai trò</option>
+            <option value="CUSTOMER">Khách hàng</option>
+            <option value="STAFF">Nhân viên</option>
+          </select>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(parseStatusFilter(e.target.value))}
+            className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 outline-none hover:bg-gray-50 transition font-medium"
+            title="Status Filter"
+          >
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="ACTIVE">Hoạt động</option>
+            <option value="LOCKED">Bị khóa</option>
           </select>
         </div>
       </div>
@@ -129,9 +169,9 @@ export default function AdminUsersPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
-                          {user.fullName.charAt(0)}
+                          {(user.fullName || user.email || '?').charAt(0)}
                         </div>
-                        <div className="text-sm font-bold text-gray-900">{user.fullName}</div>
+                        <div className="text-sm font-bold text-gray-900">{user.fullName || '—'}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -139,13 +179,13 @@ export default function AdminUsersPage() {
                         <Mail size={12} className="text-gray-400" /> {user.email}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-gray-600 font-medium">
-                        <Phone size={12} className="text-gray-400" /> {user.phone}
+                        <Phone size={12} className="text-gray-400" /> {user.phone || '—'}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
                         {user.role === 'ADMIN' && <Shield size={14} className="text-orange-500" />}
-                        {user.role}
+                        {user.role || '—'}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
@@ -153,9 +193,9 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex px-2 py-1 rounded text-[11px] font-bold uppercase ${
-                        !user.locked ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        !Boolean(user.locked) ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                       }`}>
-                        {!user.locked ? 'Hoạt động' : 'Bị khóa'}
+                        {!Boolean(user.locked) ? 'Hoạt động' : 'Bị khóa'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -164,16 +204,16 @@ export default function AdminUsersPage() {
                           onClick={() => handleToggleLock(user)}
                           disabled={actionLoading === user.id}
                           className={`p-1.5 rounded transition-colors ${
-                            user.locked 
+                            Boolean(user.locked) 
                               ? 'text-green-600 hover:bg-green-50' 
                               : 'text-red-600 hover:bg-red-50'
                           }`} 
-                          title={user.locked ? 'Mở khóa' : 'Khóa tài khoản'}
+                          title={Boolean(user.locked) ? 'Mở khóa' : 'Khóa tài khoản'}
                         >
                           {actionLoading === user.id ? (
                             <Loader2 size={18} className="animate-spin" />
                           ) : (
-                            user.locked ? <Unlock size={18} /> : <Lock size={18} />
+                            Boolean(user.locked) ? <Unlock size={18} /> : <Lock size={18} />
                           )}
                         </button>
                         <button className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Thêm thao tác">
@@ -208,3 +248,6 @@ export default function AdminUsersPage() {
     </div>
   );
 }
+
+type RoleFilter = 'ALL' | 'CUSTOMER' | 'STAFF';
+type StatusFilter = 'ALL' | 'ACTIVE' | 'LOCKED';

@@ -106,8 +106,13 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
       }
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+    } catch (err: unknown) {
+      const responseMessage =
+        typeof (err as { response?: { data?: { message?: unknown } } })?.response?.data?.message === 'string'
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+      const fallbackMessage = typeof (err as { message?: unknown })?.message === 'string' ? (err as { message?: string }).message : null;
+      setError(responseMessage || fallbackMessage || 'Có lỗi xảy ra. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }

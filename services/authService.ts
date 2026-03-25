@@ -10,6 +10,7 @@ export interface UserProfile {
   phone_number?: string;
   birth_date?: string;
   gender?: string;
+  [key: string]: unknown;
 }
 
 const unwrapData = <T>(payload: unknown): T => {
@@ -20,11 +21,11 @@ const unwrapData = <T>(payload: unknown): T => {
 };
 
 export const authService = {
-  login: async (credentials: any) => {
+  login: async (credentials: { email: string; password: string }) => {
     const response = await api.post('/auth/login', credentials);
     return response.data;
   },
-  register: async (userData: any) => {
+  register: async (userData: { email: string; password: string; full_name: string }) => {
     const response = await api.post('/auth/register', userData);
     return response.data;
   },
@@ -39,5 +40,9 @@ export const authService = {
       phone: profile.phone || profile.phone_number || '',
       phone_number: profile.phone_number || profile.phone || '',
     } as UserProfile;
-  }
+  },
+  updateProfile: async (payload: { full_name?: string; phone?: string }) => {
+    const response = await api.put('/users/profile', payload);
+    return unwrapData<UserProfile>(response.data);
+  },
 };
