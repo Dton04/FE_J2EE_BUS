@@ -114,7 +114,7 @@ export default function AdminRoutesPage() {
           <input 
             type="text" 
             placeholder="Tìm theo tỉnh thành, tên nhà ga..." 
-            className="w-full pl-12 pr-4 py-3 border border-gray-100 rounded-xl outline-none focus:border-blue-400 bg-gray-50/50 transition-all font-medium text-sm"
+            className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-gray-50 transition-all font-semibold text-sm text-gray-800 placeholder:text-gray-400"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />

@@ -3,12 +3,13 @@ import { api } from './api';
 export interface RouteRequest {
   departure: string;
   destination: string;
-  distance: number;
-  duration: number; // in minutes
+  distance_km: number;
+  estimated_duration: number; // in minutes
   origin_station_id: number;
   destination_station_id: number;
   base_price?: number;
   price?: number;
+  departure_date?: string;
 }
 
 export interface RouteResponse {
