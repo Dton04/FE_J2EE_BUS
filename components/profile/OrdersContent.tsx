@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { bookingService, type MyBookingResponse } from '@/services/bookingService';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -10,46 +10,65 @@ export default function OrdersContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [items, setItems] = useState<MyBookingResponse[]>([]);
   const [error, setError] = useState<string>('');
+  const [cancelingOrderId, setCancelingOrderId] = useState<number | null>(null);
 
   const queryType = useMemo(() => {
-    if (activeTab === 'Đã đi') return 'HISTORY' as const;
-    if (activeTab === 'Đã hủy') return 'HISTORY' as const;
-    return 'UPCOMING' as const;
+    if (activeTab === 'Hiện tại') return 'UPCOMING' as const;
+    return 'ALL' as const; // dùng ALL để client tự filter, tránh backend trả rỗng theo HISTORY
   }, [activeTab]);
 
   const filteredItems = useMemo(() => {
     if (activeTab === 'Đã hủy') {
-      return items.filter((b) => b.status === 'CANCELLED' || b.status === 'EXPIRED');
+      return items.filter((b) => ['CANCELLED', 'EXPIRED'].includes((b.status || '').toUpperCase()));
     }
     if (activeTab === 'Đã đi') {
-      return items.filter((b) => b.status !== 'CANCELLED' && b.status !== 'EXPIRED');
+      return items.filter((b) => ['COMPLETED', 'CONFIRMED', 'PENDING_PAYMENT', 'HOLDING'].includes((b.status || '').toUpperCase()));
     }
-    return items;
+    return items.filter((b) => ['HOLDING', 'PENDING_PAYMENT'].includes((b.status || '').toUpperCase()));
   }, [activeTab, items]);
 
+  const load = useCallback(async () => {
+    if (!isAuthenticated) {
+      setItems([]);
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    try {
+      const data = await bookingService.getMyBookings(queryType);
+      setItems(Array.isArray(data) ? data : []);
+    } catch (err: unknown) {
+      const responseMessage =
+        typeof (err as { response?: { data?: { message?: unknown } } })?.response?.data?.message === 'string'
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+      setError(responseMessage || 'Không thể tải danh sách đơn hàng. Vui lòng thử lại.');
+      setItems([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated]);
+
   useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const load = async () => {
-      setIsLoading(true);
-      setError('');
-      try {
-        const data = await bookingService.getMyBookings(queryType);
-        setItems(Array.isArray(data) ? data : []);
-      } catch (err: unknown) {
-        const responseMessage =
-          typeof (err as { response?: { data?: { message?: unknown } } })?.response?.data?.message === 'string'
-            ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-            : null;
-        setError(responseMessage || 'Không thể tải danh sách đơn hàng. Vui lòng thử lại.');
-        setItems([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     load();
-  }, [isAuthenticated, queryType]);
+  }, [load, queryType]);
+
+  const handleCancel = async (orderId: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) return;
+
+    setCancelingOrderId(orderId);
+    try {
+      await bookingService.cancelBooking(orderId);
+      await load();
+      alert('Hủy đơn hàng thành công.');
+    } catch (err) {
+      console.error('Failed to cancel booking', err);
+      alert('Không thể hủy đơn hàng lúc này. Vui lòng thử lại.');
+    } finally {
+      setCancelingOrderId(null);
+    }
+  };
 
   const formatPrice = (value: number) => value.toLocaleString('vi-VN') + 'đ';
   const formatTime = (iso: string | null) => {
@@ -65,6 +84,12 @@ export default function OrdersContent() {
     if (status === 'HOLDING') return 'bg-blue-50 text-blue-700 border-blue-100';
     if (status === 'CANCELLED' || status === 'EXPIRED') return 'bg-red-50 text-red-700 border-red-100';
     return 'bg-gray-50 text-gray-700 border-gray-100';
+  };
+
+  const canCancelStatus = (status: string | undefined) => {
+    const s = (status || '').toUpperCase();
+    // chỉ cho phép hủy 3 trạng thái này theo luồng yêu cầu
+    return ['HOLDING', 'PENDING_PAYMENT', 'UNPAID'].includes(s);
   };
   
   return (
@@ -150,6 +175,15 @@ export default function OrdersContent() {
                   <div className="text-[13px] text-gray-600">
                     Thanh toán: <span className="font-semibold text-gray-800">{b.payment_status}</span>
                   </div>
+                  {canCancelStatus(b.status) && (
+                    <button
+                      onClick={() => handleCancel(b.booking_id)}
+                      disabled={cancelingOrderId === b.booking_id}
+                      className="text-sm font-semibold px-4 py-2 border rounded-lg border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      {cancelingOrderId === b.booking_id ? 'Đang hủy...' : 'Hủy chuyến'}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
