@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { tripService } from '../../services/tripService';
-import TripCard from './TripCard';
+import TripCard from '@/components/search/TripCard';
 
 const PROMO_TAGS = [
   { id: 1, label: 'LUỒNG VÉ CHỐT DEAL', bg: 'bg-blue-500' },
@@ -51,8 +51,18 @@ export default function SearchResults() {
         const data = await tripService.searchTrips(originId, destinationId, dateStr);
         
         // Map backend DTO to frontend TripProps format
-        const mappedTrips = (data || []).map((t: any, idx: number) => ({
-          id: t.id?.toString() || `${idx}`,
+        const mappedTrips = (data || []).map((t: any, idx: number) => {
+          const backendTripId =
+            t?.id ??
+            t?.trip_id ??
+            t?.tripId ??
+            t?.trip?.id ??
+            t?.legs?.[0]?.trip_id ??
+            null;
+
+          return {
+          id: backendTripId != null ? String(backendTripId) : `row-${idx + 1}`,
+          backendTripId,
           image: t.image || `https://picsum.photos/seed/bus${t.id || idx}/400/400`,
           operator: t.operatorName || t.bus?.operator?.name || 'Vexere Bus',
           rating: t.rating || 4.5,
@@ -69,7 +79,7 @@ export default function SearchResults() {
           availableSeats: t.availableSeats ?? 20,
           badges: t.badges || ['Xác nhận tức thì'],
           promoText: t.promoText,
-        }));
+        }});
 
         setTrips(mappedTrips);
       } catch (err: any) {
