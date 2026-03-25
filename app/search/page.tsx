@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import SearchBanner from '../../components/home/SearchBanner';
 import SearchSidebar from '../../components/search/SearchSidebar';
 import SearchResults from '../../components/search/SearchResults';
@@ -24,7 +25,9 @@ export default function SearchPage() {
       {/* Main Content Area */}
       <div className="max-w-6xl mx-auto px-4 w-full mt-6 flex gap-6 items-start">
         <SearchSidebar />
-        <SearchResults />
+        <Suspense fallback={<div className="text-sm text-gray-500">Đang tải kết quả...</div>}>
+          <SearchResults />
+        </Suspense>
       </div>
     </main>
   );

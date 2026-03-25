@@ -46,10 +46,10 @@ function NewsGroup({ group }: { group: typeof newsSections[0] }) {
         </a>
       </div>
       <div className="relative group/row px-4 sm:px-6">
-        <button onClick={() => scroll('left')} className="absolute -left-1 top-[38%] -translate-y-1/2 z-10 w-8 h-8 bg-white shadow-md rounded-full flex items-center justify-center border border-gray-200 opacity-0 group-hover/row:opacity-100 transition">
+        <button title="Cuộn sang trái" aria-label="Cuộn sang trái" onClick={() => scroll('left')} className="absolute -left-1 top-[38%] -translate-y-1/2 z-10 w-8 h-8 bg-white shadow-md rounded-full flex items-center justify-center border border-gray-200 opacity-0 group-hover/row:opacity-100 transition">
           <ChevronLeft size={18} className="text-gray-600" />
         </button>
-        <div ref={scrollRef} className="flex gap-3 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div ref={scrollRef} className="hide-scrollbar flex gap-3 overflow-x-auto">
           {group.items.map((item, i) => (
             <a key={i} href="#" className="flex-none w-[210px] rounded-xl overflow-hidden border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 bg-white group/card">
               <div className="h-[120px] overflow-hidden bg-gray-50 relative">
@@ -67,7 +67,7 @@ function NewsGroup({ group }: { group: typeof newsSections[0] }) {
             </a>
           ))}
         </div>
-        <button onClick={() => scroll('right')} className="absolute -right-1 top-[38%] -translate-y-1/2 z-10 w-8 h-8 bg-white shadow-md rounded-full flex items-center justify-center border border-gray-200 opacity-0 group-hover/row:opacity-100 transition">
+        <button title="Cuộn sang phải" aria-label="Cuộn sang phải" onClick={() => scroll('right')} className="absolute -right-1 top-[38%] -translate-y-1/2 z-10 w-8 h-8 bg-white shadow-md rounded-full flex items-center justify-center border border-gray-200 opacity-0 group-hover/row:opacity-100 transition">
           <ChevronRight size={18} className="text-gray-600" />
         </button>
       </div>

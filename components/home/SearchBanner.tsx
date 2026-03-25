@@ -1,7 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { MapPin, RefreshCw, Bus, Plane, Train, Car, Calendar, X, BadgeCheck, Headphones, Tag, CircleDollarSign } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import DatePicker from './DatePicker';
 import { stationService, StationResponse } from '../../services/stationService';
 
@@ -44,18 +44,7 @@ export default function SearchBanner() {
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerMode, setPickerMode] = useState<'depart' | 'return'>('depart');
-
-
-
-  const dateRowRef = useRef<HTMLDivElement>(null);
-  const [anchorRect, setAnchorRect] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 });
-
   const openPicker = (mode: 'depart' | 'return') => {
-    // Measure the position of the date buttons row for portal positioning
-    if (dateRowRef.current) {
-      const r = dateRowRef.current.getBoundingClientRect();
-      setAnchorRect({ top: r.bottom, left: r.left, width: r.width });
-    }
     setPickerMode(mode);
     setPickerOpen(true);
   };
@@ -78,16 +67,7 @@ export default function SearchBanner() {
   };
 
   return (
-    <div
-      className="relative w-full flex flex-col items-center px-4 py-10"
-      style={{
-        backgroundImage: 'url("https://static.vexere.com/production/banners/1209/leaderboard_1440x480-(2).jpg")',
-        backgroundSize: '100% auto',
-        backgroundPosition: 'center top',
-        backgroundRepeat: 'no-repeat',
-        backgroundColor: '#2474E5',
-      }}
-    >
+    <div className="search-banner-hero relative w-full flex flex-col items-center px-4 py-10">
       {/* Spacer for hero image text */}
       <div className="h-20 mb-4" />
 
@@ -154,6 +134,8 @@ export default function SearchBanner() {
                 <div className="w-px h-8 bg-gray-200" />
                 <button
                   onClick={swap}
+                  title="Đổi điểm đi và điểm đến"
+                  aria-label="Đổi điểm đi và điểm đến"
                   className="absolute left-1/2 -translate-x-1/2 z-10 bg-white border border-gray-200 rounded-full p-1.5 hover:bg-gray-50 shadow-sm transition"
                 >
                   <RefreshCw size={14} className="text-gray-500" />
@@ -183,7 +165,7 @@ export default function SearchBanner() {
             </div>
 
             {/* Date Inputs */}
-            <div ref={dateRowRef} className="flex gap-2 xl:flex-none">
+            <div className="flex gap-2 xl:flex-none">
               {/* Depart Date */}
               <button
                 onClick={() => openPicker('depart')}
@@ -255,7 +237,7 @@ export default function SearchBanner() {
             <>
               {/* Invisible backdrop — clicking it closes the picker */}
               <div
-                style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
+                className="fixed inset-0 z-[9998]"
                 onClick={() => setPickerOpen(false)}
               />
               <DatePicker
@@ -265,7 +247,6 @@ export default function SearchBanner() {
                 onReturnChange={setReturnDate}
                 onClose={() => setPickerOpen(false)}
                 mode={pickerMode}
-                anchorRect={anchorRect}
               />
             </>
           )}

@@ -1,6 +1,5 @@
 'use client';
-import { useState, useCallback, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, ToggleLeft, ToggleRight } from 'lucide-react';
 
 // Simplified lunar date conversion (approximation for display)
@@ -17,8 +16,6 @@ interface DatePickerProps {
   onReturnChange: (d: Date | null) => void;
   onClose: () => void;
   mode: 'depart' | 'return';
-  /** Absolute position from the trigger button */
-  anchorRect: { top: number; left: number; width: number };
 }
 
 const WEEKDAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
@@ -117,7 +114,7 @@ function MonthGrid({
 }
 
 export default function DatePicker({
-  departDate, returnDate, onDepartChange, onReturnChange, onClose, mode, anchorRect,
+  departDate, returnDate, onDepartChange, onReturnChange, onClose, mode,
 }: DatePickerProps) {
   const today = new Date();
   const [viewMonth, setViewMonth] = useState(() => {
@@ -127,10 +124,6 @@ export default function DatePicker({
   const [showLunar, setShowLunar] = useState(true);
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
   const [selecting, setSelecting] = useState<'depart' | 'return'>(mode);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
-
   const nextMonth = {
     year:  viewMonth.month === 11 ? viewMonth.year + 1 : viewMonth.year,
     month: (viewMonth.month + 1) % 12,
@@ -163,16 +156,9 @@ export default function DatePicker({
     }
   }, [selecting, departDate, returnDate, onDepartChange, onReturnChange, onClose]);
 
-  // Calculate fixed position — keep it on screen horizontally
-  const PICKER_W = 620;
-  const vw = typeof window !== 'undefined' ? window.innerWidth : 1200;
-  let left = anchorRect.left + anchorRect.width / 2 - PICKER_W / 2;
-  left = Math.max(8, Math.min(left, vw - PICKER_W - 8));
-
-  const content = (
+  return (
     <div
-      style={{ position: 'fixed', top: anchorRect.top + 8, left, width: PICKER_W, zIndex: 9999 }}
-      className="bg-white rounded-2xl shadow-2xl border border-gray-200"
+      className="absolute left-1/2 top-[calc(100%+8px)] z-[9999] w-[620px] -translate-x-1/2 rounded-2xl border border-gray-200 bg-white shadow-2xl"
       onClick={e => e.stopPropagation()}
       onMouseDown={e => e.stopPropagation()}
     >
@@ -201,6 +187,8 @@ export default function DatePicker({
         {/* Left arrow */}
         <button
           onClick={handlePrev}
+          title="Tháng trước"
+          aria-label="Tháng trước"
           className="absolute left-1 top-1/2 -translate-y-1/2 z-10 p-1.5 hover:bg-gray-100 rounded-full transition"
         >
           <ChevronLeft size={20} className="text-gray-600" />
@@ -222,6 +210,8 @@ export default function DatePicker({
         {/* Right arrow */}
         <button
           onClick={() => setViewMonth(nextMonth)}
+          title="Tháng sau"
+          aria-label="Tháng sau"
           className="absolute right-1 top-1/2 -translate-y-1/2 z-10 p-1.5 hover:bg-gray-100 rounded-full transition"
         >
           <ChevronRight size={20} className="text-gray-600" />
@@ -250,7 +240,4 @@ export default function DatePicker({
       </div>
     </div>
   );
-
-  if (!mounted) return null;
-  return createPortal(content, document.body);
 }

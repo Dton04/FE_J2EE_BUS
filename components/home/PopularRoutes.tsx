@@ -41,15 +41,14 @@ export default function PopularRoutes() {
 
         <div className="relative">
           {canLeft && (
-            <button onClick={() => scroll('left')} className="absolute -left-3 top-[45%] -translate-y-1/2 z-10 w-8 h-8 bg-white shadow-md rounded-full flex items-center justify-center border border-gray-200 hover:shadow-lg transition">
+            <button title="Cuộn sang trái" aria-label="Cuộn sang trái" onClick={() => scroll('left')} className="absolute -left-3 top-[45%] -translate-y-1/2 z-10 w-8 h-8 bg-white shadow-md rounded-full flex items-center justify-center border border-gray-200 hover:shadow-lg transition">
               <ChevronLeft size={18} className="text-gray-600" />
             </button>
           )}
           <div
             ref={scrollRef}
             onScroll={checkScroll}
-            className="flex gap-3 overflow-x-auto"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="hide-scrollbar flex gap-3 overflow-x-auto"
           >
             {routes.map((r, i) => (
               <a key={i} href="#" className="flex-none w-[185px] rounded-xl overflow-hidden border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 bg-white group">
@@ -73,7 +72,7 @@ export default function PopularRoutes() {
             ))}
           </div>
           {canRight && (
-            <button onClick={() => scroll('right')} className="absolute -right-3 top-[45%] -translate-y-1/2 z-10 w-8 h-8 bg-white shadow-md rounded-full flex items-center justify-center border border-gray-200 hover:shadow-lg transition">
+            <button title="Cuộn sang phải" aria-label="Cuộn sang phải" onClick={() => scroll('right')} className="absolute -right-3 top-[45%] -translate-y-1/2 z-10 w-8 h-8 bg-white shadow-md rounded-full flex items-center justify-center border border-gray-200 hover:shadow-lg transition">
               <ChevronRight size={18} className="text-gray-600" />
             </button>
           )}
