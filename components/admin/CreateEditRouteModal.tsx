@@ -12,24 +12,19 @@ interface CreateEditRouteModalProps {
 }
 
 interface FormState {
-  departure: string;
-  destination: string;
-  distance: number;
-  duration: number;
-  base_price?: number;
-  price?: number;
-  origin_station_id?: number;
-  destination_station_id?: number;
+  origin_station_id: number;
+  destination_station_id: number;
+  distance_km?: number;
+  estimated_duration?: number;
+  base_price: number;
 }
 
 export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editData }: CreateEditRouteModalProps) {
   const [formData, setFormData] = useState<FormState>({
-    departure: '',
-    destination: '',
     origin_station_id: 0,
     destination_station_id: 0,
-    distance: 0,
-    duration: 0,
+    distance_km: undefined,
+    estimated_duration: undefined,
     base_price: 0,
   });
   const [stations, setStations] = useState<StationResponse[]>([]);
@@ -47,24 +42,19 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
       
       if (editData) {
         setFormData({
-          departure: editData.departure || editData.origin_station?.city || '',
-          destination: editData.destination || editData.destination_station?.city || '',
-          distance: editData.distance,
-          duration: editData.duration,
-          price: editData.price || editData.base_price || 0,
-          base_price: editData.base_price || editData.price || 0,
           origin_station_id: editData.origin_station?.id || 0,
           destination_station_id: editData.destination_station?.id || 0,
+          distance_km: editData.distance_km,
+          estimated_duration: editData.estimated_duration,
+          base_price: editData.base_price || 0,
         });
       } else {
         setFormData({
-          departure: '',
-          destination: '',
-          distance: 0,
-          duration: 0,
-          base_price: 0,
           origin_station_id: 0,
           destination_station_id: 0,
+          distance_km: undefined,
+          estimated_duration: undefined,
+          base_price: 0,
         });
       }
     }
@@ -74,8 +64,16 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.departure || !formData.destination) {
-      setError('Vui lòng chọn hoặc nhập điểm đi và điểm đến.');
+    if (!formData.origin_station_id || !formData.destination_station_id) {
+      setError('Vui lòng chọn điểm đi và điểm đến.');
+      return;
+    }
+    if (formData.origin_station_id === formData.destination_station_id) {
+      setError('Điểm đi và điểm đến không được trùng nhau.');
+      return;
+    }
+    if (!formData.base_price || formData.base_price <= 0) {
+      setError('Giá vé cơ bản phải lớn hơn 0.');
       return;
     }
     
@@ -83,17 +81,12 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
     setError(null);
     try {
       const requestData: RouteRequest = {
-        departure: formData.departure,
-        destination: formData.destination,
-        distance: Number(formData.distance),
-        duration: Number(formData.duration),
-        origin_station_id: formData.origin_station_id || 0,
-        destination_station_id: formData.destination_station_id || 0,
-        base_price: formData.base_price || 0,
-        price: formData.base_price || 0,
+        origin_station_id: formData.origin_station_id,
+        destination_station_id: formData.destination_station_id,
+        base_price: Number(formData.base_price),
+        distance_km: formData.distance_km != null ? Number(formData.distance_km) : undefined,
+        estimated_duration: formData.estimated_duration != null ? Number(formData.estimated_duration) : undefined,
       };
-
-      console.log('Sending full route creation payload:', requestData);
 
       if (editData) {
         await routeService.updateRoute(editData.id, requestData);
@@ -114,15 +107,11 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
     }
   };
 
-  const handleStationChange = (type: 'departure' | 'destination', stationId: number) => {
-    const station = stations.find(s => s.id === stationId);
-    if (station) {
-      setFormData({
-        ...formData,
-        [type]: station.city,
-        [`${type === 'departure' ? 'origin' : 'destination'}_station_id`]: station.id
-      });
-    }
+  const handleStationChange = (type: 'origin' | 'destination', stationId: number) => {
+    setFormData({
+      ...formData,
+      [type === 'origin' ? 'origin_station_id' : 'destination_station_id']: stationId,
+    });
   };
 
   const formatDuration = (mins: number) => {
@@ -171,8 +160,8 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
                 required
                 disabled={stationsLoading}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm text-gray-700 appearance-none bg-white font-medium disabled:bg-gray-50"
-                value={stations.find(s => s.city === formData.departure)?.id || 0}
-                onChange={(e) => handleStationChange('departure', Number(e.target.value))}
+                value={formData.origin_station_id || 0}
+                onChange={(e) => handleStationChange('origin', Number(e.target.value))}
               >
                 <option value="0">-- Chọn điểm đi --</option>
                 {stations.map((s) => (
@@ -190,7 +179,7 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
                 required
                 disabled={stationsLoading}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm text-gray-700 appearance-none bg-white font-medium disabled:bg-gray-50"
-                value={stations.find(s => s.city === formData.destination)?.id || 0}
+                value={formData.destination_station_id || 0}
                 onChange={(e) => handleStationChange('destination', Number(e.target.value))}
               >
                 <option value="0">-- Chọn điểm đến --</option>
@@ -211,8 +200,8 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
                 min="1"
                 placeholder="VD: 300"
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm font-medium"
-                value={formData.distance || ''}
-                onChange={(e) => setFormData({ ...formData, distance: Number(e.target.value) })}
+                value={formData.distance_km ?? ''}
+                onChange={(e) => setFormData({ ...formData, distance_km: e.target.value ? Number(e.target.value) : undefined })}
               />
             </div>
 
@@ -228,11 +217,11 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
                   min="1"
                   placeholder="VD: 360"
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm font-medium pr-16"
-                  value={formData.duration || ''}
-                  onChange={(e) => setFormData({ ...formData, duration: Number(e.target.value) })}
+                  value={formData.estimated_duration ?? ''}
+                  onChange={(e) => setFormData({ ...formData, estimated_duration: e.target.value ? Number(e.target.value) : undefined })}
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold">
-                  {formData.duration > 0 ? formatDuration(formData.duration) : ''}
+                  {(formData.estimated_duration || 0) > 0 ? formatDuration(formData.estimated_duration || 0) : ''}
                 </span>
               </div>
             </div>
@@ -247,7 +236,7 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
               <input
                 required
                 type="number"
-                min="0"
+                min="1"
                 step="1000"
                 placeholder="VD: 250000"
                 className="w-full border border-gray-200 rounded-xl px-10 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm font-bold text-blue-600"

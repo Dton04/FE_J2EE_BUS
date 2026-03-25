@@ -72,16 +72,17 @@ export default function AdminRoutesPage() {
   };
 
   const filteredRoutes = routes.filter(r => 
-    (r.departure || r.origin_station?.city || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (r.destination || r.destination_station?.city || '').toLowerCase().includes(searchTerm.toLowerCase())
+    (r.origin_station?.city || r.origin_station?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (r.destination_station?.city || r.destination_station?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const formatPrice = (price?: number) => {
-    if (price === undefined) return '0đ';
+    if (price == null) return '0đ';
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
 
-  const formatDuration = (mins: number) => {
+  const formatDuration = (mins?: number) => {
+    if (mins == null) return '—';
     const h = Math.floor(mins / 60);
     const m = mins % 60;
     return `${h}h ${m}p`;
@@ -171,7 +172,7 @@ export default function AdminRoutesPage() {
                   <div className="flex items-center gap-3">
                     <div className="text-center">
                       <div className="text-sm font-bold text-gray-400 uppercase tracking-tighter">Từ</div>
-                      <div className="text-lg font-black text-gray-800">{route.departure || route.origin_station?.city}</div>
+                      <div className="text-lg font-black text-gray-800">{route.origin_station?.city || '—'}</div>
                       <div className="text-xs font-medium text-gray-500 truncate max-w-[120px]">{route.origin_station?.name}</div>
                     </div>
                     
@@ -181,12 +182,12 @@ export default function AdminRoutesPage() {
                           <ArrowRight size={14} className="text-blue-500" />
                         </div>
                       </div>
-                      <div className="text-[10px] font-bold text-blue-400 uppercase">{route.distance}km</div>
+                      <div className="text-[10px] font-bold text-blue-400 uppercase">{route.distance_km ?? '—'}km</div>
                     </div>
 
                     <div className="text-center text-right">
                       <div className="text-sm font-bold text-gray-400 uppercase tracking-tighter">Đến</div>
-                      <div className="text-lg font-black text-gray-800">{route.destination || route.destination_station?.city}</div>
+                      <div className="text-lg font-black text-gray-800">{route.destination_station?.city || '—'}</div>
                       <div className="text-xs font-medium text-gray-500 truncate max-w-[120px]">{route.destination_station?.name}</div>
                     </div>
                   </div>
@@ -200,7 +201,7 @@ export default function AdminRoutesPage() {
                   </div>
                   <div>
                     <div className="text-[10px] font-bold text-gray-400 uppercase">Thời gian đi</div>
-                    <div className="text-sm font-bold text-gray-800">{formatDuration(route.duration)}</div>
+                    <div className="text-sm font-bold text-gray-800">{formatDuration(route.estimated_duration)}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -209,7 +210,7 @@ export default function AdminRoutesPage() {
                   </div>
                   <div>
                     <div className="text-[10px] font-bold text-gray-400 uppercase">Giá vé cơ bản</div>
-                    <div className="text-sm font-black text-[#2474E5]">{formatPrice(route.price || route.base_price)}</div>
+                    <div className="text-sm font-black text-[#2474E5]">{formatPrice(route.base_price)}</div>
                   </div>
                 </div>
               </div>

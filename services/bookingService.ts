@@ -30,6 +30,28 @@ export interface MyBookingResponse {
   payment_status: string;
 }
 
+export interface BookingDetailInfo {
+  booking_info: {
+    booking_code: string;
+    status: string;
+    created_at: string | null;
+  };
+  trip_info: {
+    route: string;
+    bus_plate: string;
+    bus_type: string;
+    departure: string;
+    pickup_point: string;
+  };
+  tickets: Array<{ seat: string; passenger: string }>;
+  payment: {
+    method: string;
+    total: number;
+  };
+  qr_string: string;
+  policies: string;
+}
+
 const unwrapData = <T>(payload: unknown): T => {
   if (payload && typeof payload === 'object' && 'data' in (payload as Record<string, unknown>)) {
     return (payload as { data: T }).data;
@@ -51,5 +73,10 @@ export const bookingService = {
   cancelBooking: async (bookingId: number) => {
     const response = await api.put(`/bookings/${bookingId}/cancel`);
     return unwrapData<string>(response.data);
+  },
+
+  getBookingDetail: async (bookingId: number) => {
+    const response = await api.get(`/bookings/${bookingId}`);
+    return unwrapData<BookingDetailInfo>(response.data);
   },
 };

@@ -10,6 +10,26 @@ export default function OrdersContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [items, setItems] = useState<MyBookingResponse[]>([]);
   const [error, setError] = useState<string>('');
+  const [paymentBanner, setPaymentBanner] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get('payment');
+    if (payment === 'success') {
+      setPaymentBanner({ type: 'success', text: 'Thanh toán thành công.' });
+    } else if (payment === 'failed') {
+      setPaymentBanner({ type: 'error', text: 'Thanh toán thất bại hoặc đã bị huỷ.' });
+    }
+
+    if (payment) {
+      params.delete('payment');
+      params.delete('txnRef');
+      const query = params.toString();
+      const nextUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+      window.history.replaceState(null, '', nextUrl);
+      window.setTimeout(() => setPaymentBanner(null), 4000);
+    }
+  }, []);
 
   const queryType = useMemo(() => {
     if (activeTab === 'Đã đi') return 'HISTORY' as const;
@@ -69,6 +89,17 @@ export default function OrdersContent() {
   
   return (
     <div className="flex-1 w-full">
+      {paymentBanner && (
+        <div
+          className={`mb-4 rounded-xl px-4 py-3 text-[14px] font-bold border ${
+            paymentBanner.type === 'success'
+              ? 'bg-green-50 text-green-700 border-green-100'
+              : 'bg-red-50 text-red-700 border-red-100'
+          }`}
+        >
+          {paymentBanner.text}
+        </div>
+      )}
       <div className="bg-white rounded-xl shadow-sm flex overflow-hidden">
         {['Hiện tại', 'Đã đi', 'Đã hủy'].map((tab) => (
           <button
@@ -116,7 +147,12 @@ export default function OrdersContent() {
         ) : (
           <div className="flex flex-col gap-3">
             {filteredItems.map((b) => (
-              <div key={b.booking_id} className="bg-white border border-gray-100 rounded-xl shadow-sm p-4 flex flex-col gap-3">
+              <div
+                key={b.booking_id}
+                className="bg-white border border-gray-100 rounded-xl shadow-sm p-4 flex flex-col gap-3 hover:shadow-md transition cursor-pointer"
+                onClick={() => window.location.assign(`/profile/orders/${b.booking_id}`)}
+                title="Xem chi tiết đơn"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="text-[15px] font-bold text-gray-900 truncate">
