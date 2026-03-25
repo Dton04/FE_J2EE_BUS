@@ -45,7 +45,14 @@ export default function ETicketPage({ params }: { params: Promise<{ id: string }
         setTicket(data);
       } catch (err: any) {
         console.error('Lỗi tải E-Ticket:', err);
-        setError('Không tìm thấy vé. Vui lòng kiểm tra lại!');
+        const status = err?.response?.status;
+        if (status === 403) {
+          setError('Bạn không có quyền xem vé này. Vé có thể được đặt bởi tài khoản khác hoặc đặt ở chế độ khách (không đăng nhập).');
+        } else if (status === 404) {
+          setError('Không tìm thấy vé. Mã vé không tồn tại hoặc đã bị xóa.');
+        } else {
+          setError('Không thể tải thông tin vé. Vui lòng thử lại sau!');
+        }
       } finally {
         setLoading(false);
       }
