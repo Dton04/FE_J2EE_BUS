@@ -47,7 +47,10 @@ api.interceptors.response.use(
 
     const refreshToken = useAuthStore.getState().refreshToken;
     if (!refreshToken) {
-      useAuthStore.getState().logout();
+      const hasHydrated = useAuthStore.getState().hasHydrated;
+      if (hasHydrated) {
+        useAuthStore.getState().logout();
+      }
       return Promise.reject(error);
     }
 
@@ -81,7 +84,10 @@ api.interceptors.response.use(
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
       return api(originalRequest);
     } catch (refreshError) {
-      useAuthStore.getState().logout();
+      const hasHydrated = useAuthStore.getState().hasHydrated;
+      if (hasHydrated) {
+        useAuthStore.getState().logout();
+      }
       return Promise.reject(refreshError);
     }
   }

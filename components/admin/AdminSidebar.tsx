@@ -18,7 +18,9 @@ export default function AdminSidebar() {
   const menuItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Quản lý Chuyến', href: '/admin/trips', icon: Bus },
+    { name: 'Xe Bus', href: '/admin/buses', icon: Bus },
     { name: 'Tuyến & Giá', href: '/admin/routes', icon: RouteIcon },
+    { name: 'Bến xe', href: '/admin/stations', icon: RouteIcon },
     { name: 'Khách hàng', href: '/admin/users', icon: Users },
     { name: 'Thống kê', href: '/admin/statistics', icon: BarChart3 },
     { name: 'Cài đặt', href: '/admin/settings', icon: Settings },

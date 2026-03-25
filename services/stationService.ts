@@ -10,7 +10,6 @@ export interface StationResponse {
 export const stationService = {
   getAllStations: async () => {
     try {
-      // Trying public endpoint first, or admin endpoint fallback
       const response = await api.get('/stations');
       return response.data as StationResponse[];
     } catch (error: unknown) {
@@ -26,5 +25,20 @@ export const stationService = {
       console.error('Error fetching stations:', error);
       throw error;
     }
-  }
+  },
+  getAdminStations: async () => {
+    const res = await api.get('/admin/stations');
+    return res.data as StationResponse[];
+  },
+  createStation: async (payload: { name: string; city: string; address: string }) => {
+    const res = await api.post('/admin/stations', payload);
+    return res.data as StationResponse;
+  },
+  updateStation: async (id: number, payload: { name: string; city: string; address: string }) => {
+    const res = await api.put(`/admin/stations/${id}`, payload);
+    return res.data as StationResponse;
+  },
+  deleteStation: async (id: number) => {
+    await api.delete(`/admin/stations/${id}`);
+  },
 };
