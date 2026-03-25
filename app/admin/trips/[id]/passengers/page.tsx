@@ -1,76 +1,70 @@
 'use client';
-import { useState, use } from 'react';
+import { useState, use, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   ChevronLeft,
   Search,
   Filter,
-  Ticket,
   User,
   Phone,
   CheckCircle2,
   Clock,
-  XCircle,
-  Bus
+  Bus,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
+import { tripService } from '@/services/tripService';
 
-// Mock dữ liệu tạm thời
-const MOCK_PASSENGERS = [
-  {
-    id: 1001,
-    passengerName: 'Nguyễn Văn A',
-    phone: '0987654321',
-    seatNumber: 'A01',
-    price: 250000,
-    ticketStatus: 'ACTIVE',
-    checkInStatus: 'ON_BOARD'
-  },
-  {
-    id: 1002,
-    passengerName: 'Trần Thị B',
-    phone: '0912345678',
-    seatNumber: 'A02',
-    price: 250000,
-    ticketStatus: 'ACTIVE',
-    checkInStatus: 'PENDING'
-  },
-  {
-    id: 1003,
-    passengerName: 'Lê Văn C',
-    phone: '0909090909',
-    seatNumber: 'B05',
-    price: 250000,
-    ticketStatus: 'CANCELLED',
-    checkInStatus: 'PENDING'
-  },
-  {
-    id: 1004,
-    passengerName: 'Phạm Thị D',
-    phone: '0933445566',
-    seatNumber: 'B06',
-    price: 250000,
-    ticketStatus: 'ACTIVE',
-    checkInStatus: 'ON_BOARD'
-  }
-];
+interface Passenger {
+  id: number;
+  passengerName: string;
+  phone: string;
+  seatNumber: string;
+  price: number;
+  ticketStatus: 'ACTIVE' | 'CANCELLED' | string;
+  checkInStatus: 'PENDING' | 'ON_BOARD' | string;
+}
 
 export default function TripPassengersPage({ params }: { params: Promise<{ id: string }> }) {
-  // Giải quyết params dạng Promise của Next.js 15+
   const { id: tripId } = use(params);
-
+  
+  const [passengers, setPassengers] = useState<Passenger[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCheckIn, setFilterCheckIn] = useState('ALL');
 
-  const filteredPassengers = MOCK_PASSENGERS.filter(p => {
+  const fetchPassengers = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await tripService.getPassengers(tripId);
+      setPassengers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Lỗi khi tải danh sách hành khách:', err);
+      setError('Không thể tải danh sách hành khách. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
+    }
+  }, [tripId]);
+
+  useEffect(() => {
+    fetchPassengers();
+  }, [fetchPassengers]);
+
+  const filteredPassengers = passengers.filter(p => {
     const matchSearch =
       (p.passengerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (p.phone || '').includes(searchTerm) ||
-      p.seatNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      (p.seatNumber || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchFilter = filterCheckIn === 'ALL' || p.checkInStatus === filterCheckIn;
 
     return matchSearch && matchFilter;
   });
+
+  const onBoardCount = passengers.filter(p => p.checkInStatus === 'ON_BOARD').length;
+  const pendingCount = passengers.filter(p => p.checkInStatus === 'PENDING' && p.ticketStatus === 'ACTIVE').length;
 
   return (
     <div className="space-y-6">
@@ -100,21 +94,17 @@ export default function TripPassengersPage({ params }: { params: Promise<{ id: s
           <div className="flex bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
             <div className="px-4 py-2 flex flex-col items-center">
               <span className="text-xs text-gray-500 font-medium mb-1 uppercase tracking-wider">Tổng khách</span>
-              <span className="text-xl font-bold text-gray-900">{MOCK_PASSENGERS.length}</span>
+              <span className="text-xl font-bold text-gray-900">{passengers.length}</span>
             </div>
             <div className="w-px bg-gray-200"></div>
             <div className="px-4 py-2 flex flex-col items-center">
               <span className="text-xs text-green-600 font-medium mb-1 uppercase tracking-wider">Đã lên xe</span>
-              <span className="text-xl font-bold text-green-600">
-                {MOCK_PASSENGERS.filter(p => p.checkInStatus === 'ON_BOARD').length}
-              </span>
+              <span className="text-xl font-bold text-green-600">{onBoardCount}</span>
             </div>
             <div className="w-px bg-gray-200"></div>
             <div className="px-4 py-2 flex flex-col items-center">
               <span className="text-xs text-yellow-600 font-medium mb-1 uppercase tracking-wider">Chờ đón</span>
-              <span className="text-xl font-bold text-yellow-600">
-                {MOCK_PASSENGERS.filter(p => p.checkInStatus === 'PENDING' && p.ticketStatus === 'ACTIVE').length}
-              </span>
+              <span className="text-xl font-bold text-yellow-600">{pendingCount}</span>
             </div>
           </div>
         </div>
@@ -135,14 +125,14 @@ export default function TripPassengersPage({ params }: { params: Promise<{ id: s
         <div className="flex gap-2">
           <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition font-medium">
             <Filter size={18} />
-            Trạng thái
+            Bộ lọc
           </button>
           <select
             value={filterCheckIn}
             onChange={(e) => setFilterCheckIn(e.target.value)}
             className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 outline-none hover:bg-gray-50 transition font-medium cursor-pointer"
           >
-            <option value="ALL">Tất cả</option>
+            <option value="ALL">Tất cả Check-in</option>
             <option value="ON_BOARD">Đã lên xe</option>
             <option value="PENDING">Chờ đón</option>
           </select>
@@ -152,7 +142,23 @@ export default function TripPassengersPage({ params }: { params: Promise<{ id: s
       {/* Data Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto min-h-[400px]">
-          {filteredPassengers.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-3">
+              <Loader2 className="animate-spin text-blue-600" size={40} />
+              <p className="text-gray-500 font-medium">Đang tải dữ liệu hành khách...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-3 text-red-500">
+              <AlertCircle size={48} />
+              <p className="font-medium">{error}</p>
+              <button 
+                onClick={() => fetchPassengers()}
+                className="px-4 py-2 bg-red-100 hover:bg-red-200 rounded-lg transition text-sm font-bold"
+              >
+                Thử lại
+              </button>
+            </div>
+          ) : filteredPassengers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-2">
               <User size={48} className="text-gray-300 mb-2" />
               <p className="text-gray-500 font-medium text-lg">Không tìm thấy hành khách nào</p>
@@ -175,13 +181,13 @@ export default function TripPassengersPage({ params }: { params: Promise<{ id: s
                   <tr key={passenger.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold text-sm">
-                          {passenger.passengerName.charAt(0).toUpperCase()}
+                        <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold text-sm uppercase">
+                          {(passenger.passengerName || 'H').charAt(0)}
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-gray-900">{passenger.passengerName}</div>
+                          <div className="text-sm font-bold text-gray-900">{passenger.passengerName || 'Khách lẻ'}</div>
                           <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                            <Phone size={10} /> {passenger.phone}
+                            <Phone size={10} /> {passenger.phone || 'N/A'}
                           </div>
                         </div>
                       </div>
@@ -207,13 +213,14 @@ export default function TripPassengersPage({ params }: { params: Promise<{ id: s
                       )}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex px-2 py-1 rounded text-[11px] font-bold uppercase ${passenger.ticketStatus === 'ACTIVE' ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-700'
-                        }`}>
+                      <span className={`inline-flex px-2 py-1 rounded text-[11px] font-bold uppercase ${
+                        passenger.ticketStatus === 'ACTIVE' ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-700'
+                      }`}>
                         {passenger.ticketStatus === 'ACTIVE' ? 'Hợp lệ' : 'Đã hủy'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm font-bold text-gray-900 text-right">
-                      {passenger.price.toLocaleString('vi-VN')} đ
+                      {(passenger.price || 0).toLocaleString('vi-VN')} đ
                     </td>
                   </tr>
                 ))}
