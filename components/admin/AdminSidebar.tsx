@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Bus, Users, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Bus, Users, Settings, LogOut, Route as RouteIcon, BarChart3 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 
@@ -18,7 +18,9 @@ export default function AdminSidebar() {
   const menuItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Quản lý Chuyến', href: '/admin/trips', icon: Bus },
+    { name: 'Tuyến & Giá', href: '/admin/routes', icon: RouteIcon },
     { name: 'Khách hàng', href: '/admin/users', icon: Users },
+    { name: 'Thống kê', href: '/admin/statistics', icon: BarChart3 },
     { name: 'Cài đặt', href: '/admin/settings', icon: Settings },
   ];
 
