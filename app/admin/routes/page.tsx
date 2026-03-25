@@ -8,7 +8,9 @@ import {
   Route as RouteIcon,
   Clock,
   ArrowRight,
-  Loader2
+  Loader2,
+  AlertCircle,
+  Calendar
 } from 'lucide-react';
 import { routeService, RouteResponse } from '@/services/routeService';
 import CreateEditRouteModal from '@/components/admin/CreateEditRouteModal';
@@ -181,7 +183,7 @@ export default function AdminRoutesPage() {
                           <ArrowRight size={14} className="text-blue-500" />
                         </div>
                       </div>
-                      <div className="text-[10px] font-bold text-blue-400 uppercase">{route.distance}km</div>
+                      <div className="text-[10px] font-bold text-blue-400 uppercase">{route.distance || route.distance_km || 0}km</div>
                     </div>
 
                     <div className="text-center text-right">
@@ -193,14 +195,23 @@ export default function AdminRoutesPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-50">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-gray-50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                    <Calendar size={18} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase">Ngày đi</div>
+                    <div className="text-sm font-bold text-gray-800">{route.departure_date ? new Date(route.departure_date).toLocaleDateString('vi-VN') : 'Không có'}</div>
+                  </div>
+                </div>
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
                     <Clock size={18} />
                   </div>
                   <div>
                     <div className="text-[10px] font-bold text-gray-400 uppercase">Thời gian đi</div>
-                    <div className="text-sm font-bold text-gray-800">{formatDuration(route.duration)}</div>
+                    <div className="text-sm font-bold text-gray-800">{formatDuration(route.duration || route.estimated_duration || 0)}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

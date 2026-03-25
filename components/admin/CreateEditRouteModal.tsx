@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { X, Route, MapPin, Navigation, Clock, DollarSign, Loader2, Save } from 'lucide-react';
+import { X, Route, MapPin, Navigation, Clock, DollarSign, Loader2, Save, Calendar } from 'lucide-react';
 import { routeService, RouteResponse, RouteRequest } from '@/services/routeService';
 import { stationService, StationResponse } from '@/services/stationService';
 
@@ -20,6 +20,7 @@ interface FormState {
   price?: number;
   origin_station_id?: number;
   destination_station_id?: number;
+  departure_date?: string;
 }
 
 export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editData }: CreateEditRouteModalProps) {
@@ -31,6 +32,7 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
     distance: 0,
     duration: 0,
     base_price: 0,
+    departure_date: '',
   });
   const [stations, setStations] = useState<StationResponse[]>([]);
   const [loading, setLoading] = useState(false);
@@ -55,6 +57,7 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
           base_price: editData.base_price || editData.price || 0,
           origin_station_id: editData.origin_station?.id || 0,
           destination_station_id: editData.destination_station?.id || 0,
+          departure_date: editData.departure_date || '',
         });
       } else {
         setFormData({
@@ -65,6 +68,7 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
           base_price: 0,
           origin_station_id: 0,
           destination_station_id: 0,
+          departure_date: '',
         });
       }
     }
@@ -238,24 +242,40 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
             </div>
           </div>
 
-          {/* Base Price */}
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-              <DollarSign size={16} className="text-amber-500" /> Giá vé cơ bản (VNĐ)
-            </label>
-            <div className="relative">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Base Price */}
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                <DollarSign size={16} className="text-amber-500" /> Giá vé cơ bản (VNĐ)
+              </label>
+              <div className="relative">
+                <input
+                  required
+                  type="number"
+                  min="0"
+                  step="1000"
+                  placeholder="VD: 250000"
+                  className="w-full border border-gray-200 rounded-xl px-10 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm font-bold text-blue-600"
+                  value={formData.base_price || ''}
+                  onChange={(e) => setFormData({ ...formData, base_price: Number(e.target.value) })}
+                />
+                <DollarSign size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-bold">đ</span>
+              </div>
+            </div>
+
+            {/* Departure Date */}
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                <Calendar size={16} className="text-blue-500" /> Ngày tháng năm đi
+              </label>
               <input
+                type="date"
                 required
-                type="number"
-                min="0"
-                step="1000"
-                placeholder="VD: 250000"
-                className="w-full border border-gray-200 rounded-xl px-10 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm font-bold text-blue-600"
-                value={formData.base_price || ''}
-                onChange={(e) => setFormData({ ...formData, base_price: Number(e.target.value) })}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm font-medium"
+                value={formData.departure_date || ''}
+                onChange={(e) => setFormData({ ...formData, departure_date: e.target.value })}
               />
-              <DollarSign size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-bold">đ</span>
             </div>
           </div>
 
