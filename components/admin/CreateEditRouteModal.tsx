@@ -89,12 +89,13 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
       const requestData: RouteRequest = {
         departure: formData.departure,
         destination: formData.destination,
-        distance: Number(formData.distance),
-        duration: Number(formData.duration),
+        distance_km: Number(formData.distance),
+        estimated_duration: Number(formData.duration),
         origin_station_id: formData.origin_station_id || 0,
         destination_station_id: formData.destination_station_id || 0,
         base_price: formData.base_price || 0,
         price: formData.base_price || 0,
+        departure_date: formData.departure_date || undefined,
       };
 
       console.log('Sending full route creation payload:', requestData);
@@ -214,7 +215,7 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
                 type="number"
                 min="1"
                 placeholder="VD: 300"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm font-medium"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm font-bold text-gray-800"
                 value={formData.distance || ''}
                 onChange={(e) => setFormData({ ...formData, distance: Number(e.target.value) })}
               />
@@ -231,7 +232,7 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
                   type="number"
                   min="1"
                   placeholder="VD: 360"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm font-medium pr-16"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm font-bold text-gray-800 pr-16"
                   value={formData.duration || ''}
                   onChange={(e) => setFormData({ ...formData, duration: Number(e.target.value) })}
                 />
@@ -272,7 +273,7 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
               <input
                 type="date"
                 required
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm font-medium"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm font-bold text-gray-800"
                 value={formData.departure_date || ''}
                 onChange={(e) => setFormData({ ...formData, departure_date: e.target.value })}
               />
