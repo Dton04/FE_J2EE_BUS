@@ -9,7 +9,6 @@ import {
   Clock,
   ArrowRight,
   Loader2,
-  AlertCircle,
   Calendar
 } from 'lucide-react';
 import { routeService, RouteResponse } from '@/services/routeService';
@@ -74,8 +73,8 @@ export default function AdminRoutesPage() {
   };
 
   const filteredRoutes = routes.filter(r => 
-    (r.departure || r.origin_station?.city || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (r.destination || r.destination_station?.city || '').toLowerCase().includes(searchTerm.toLowerCase())
+    (r.departure || r.origin_station?.provinceName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (r.destination || r.destination_station?.provinceName || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const formatPrice = (price?: number) => {
@@ -87,6 +86,11 @@ export default function AdminRoutesPage() {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
     return `${h}h ${m}p`;
+  };
+
+  const shortName = (name?: string) => {
+    if (!name) return '';
+    return name.replace(/^(Tỉnh|Thành phố)\s+/i, '');
   };
 
   return (
@@ -173,8 +177,8 @@ export default function AdminRoutesPage() {
                   <div className="flex items-center gap-3">
                     <div className="text-center">
                       <div className="text-sm font-bold text-gray-400 uppercase tracking-tighter">Từ</div>
-                      <div className="text-lg font-black text-gray-800">{route.departure || route.origin_station?.city}</div>
-                      <div className="text-xs font-medium text-gray-500 truncate max-w-[120px]">{route.origin_station?.name}</div>
+                      <div className="text-lg font-black text-gray-800">{shortName(route.departure || route.origin_station?.provinceName)}</div>
+                      <div className="text-xs font-medium text-gray-500 truncate max-w-[120px]" title={route.origin_station?.name}>{route.origin_station?.name}</div>
                     </div>
                     
                     <div className="flex-1 flex flex-col items-center gap-1 pt-4">
@@ -188,8 +192,8 @@ export default function AdminRoutesPage() {
 
                     <div className="text-center text-right">
                       <div className="text-sm font-bold text-gray-400 uppercase tracking-tighter">Đến</div>
-                      <div className="text-lg font-black text-gray-800">{route.destination || route.destination_station?.city}</div>
-                      <div className="text-xs font-medium text-gray-500 truncate max-w-[120px]">{route.destination_station?.name}</div>
+                      <div className="text-lg font-black text-gray-800">{shortName(route.destination || route.destination_station?.provinceName)}</div>
+                      <div className="text-xs font-medium text-gray-500 truncate max-w-[120px]" title={route.destination_station?.name}>{route.destination_station?.name}</div>
                     </div>
                   </div>
                 </div>

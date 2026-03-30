@@ -13,6 +13,7 @@ import {
   Loader2
 } from 'lucide-react';
 import CreateRouteModal from '@/components/admin/CreateRouteModal';
+import EditTripModal from '@/components/admin/EditTripModal';
 import { tripService } from '@/services/tripService';
 
 interface AdminTrip {
@@ -24,6 +25,7 @@ interface AdminTrip {
   price?: string;
   seats?: number | string;
   status?: string;
+  departure_time_raw?: string;
 }
 
 interface BackendTrip {
@@ -37,6 +39,7 @@ interface BackendTrip {
 export default function AdminTripsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTrip, setEditingTrip] = useState<{ id: number; departure_time_raw?: string } | null>(null);
   const [trips, setTrips] = useState<AdminTrip[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,6 +80,7 @@ export default function AdminTripsPage() {
           price: formatPrice(t.actual_price),
           seats: '—',
           status: 'Sắp khởi hành',
+          departure_time_raw: t.departure_time,
         };
       });
 
@@ -194,7 +198,9 @@ export default function AdminTripsPage() {
                           <Users size={14} />
                           Hành khách
                         </Link>
-                        <button className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Sửa">
+                        <button
+                            onClick={() => setEditingTrip({ id: trip.id, departure_time_raw: trip.departure_time_raw })}
+                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Sửa">
                           <Edit2 size={16} />
                         </button>
                         <button className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Xóa">
@@ -221,10 +227,18 @@ export default function AdminTripsPage() {
         )}
       </div>
 
-      <CreateRouteModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSuccess={fetchTrips} 
+      <CreateRouteModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchTrips}
+      />
+
+      <EditTripModal
+        isOpen={editingTrip !== null}
+        onClose={() => setEditingTrip(null)}
+        onSuccess={fetchTrips}
+        tripId={editingTrip?.id ?? null}
+        initialData={{ departure_time: editingTrip?.departure_time_raw }}
       />
     </div>
   );

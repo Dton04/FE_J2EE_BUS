@@ -33,7 +33,7 @@ export default function AdminStationsPage() {
         const q = search.toLowerCase();
         return (
           (s.name || '').toLowerCase().includes(q) ||
-          (s.city || '').toLowerCase().includes(q) ||
+          (s.provinceName || '').toLowerCase().includes(q) ||
           (s.address || '').toLowerCase().includes(q)
         );
       }),
@@ -102,7 +102,7 @@ export default function AdminStationsPage() {
                   <div className="min-w-0">
                     <div className="text-sm font-bold text-gray-900 truncate">{s.name}</div>
                     <div className="text-xs text-gray-500 truncate">
-                      {s.city} • {s.address}
+                      {s.provinceName} • {s.address}
                     </div>
                   </div>
                 </div>

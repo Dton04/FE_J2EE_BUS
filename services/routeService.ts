@@ -25,12 +25,14 @@ export interface RouteResponse {
   origin_station?: {
     id: number;
     name: string;
-    city: string;
+    provinceId: number;
+    provinceName: string;
   };
   destination_station?: {
     id: number;
     name: string;
-    city: string;
+    provinceId: number;
+    provinceName: string;
   };
 }
 

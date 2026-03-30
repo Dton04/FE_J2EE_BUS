@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { QrCode, CheckCircle2, XCircle, Search, Bus, Clock, User, ScanLine, Ticket } from 'lucide-react';
+import { QrCode, CheckCircle2, XCircle, Search, Clock, User, ScanLine, Ticket } from 'lucide-react';
 
 import { ticketService } from '@/services/ticketService';
 
@@ -47,9 +47,19 @@ export default function CheckInPage() {
       } else {
         setScanStatus('already_checked_in');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Check-in error:', error);
-      if (error.response?.status === 400 && error.response.data?.message?.toLowerCase().includes('already')) {
+      const status =
+        typeof (error as { response?: { status?: unknown } })?.response?.status === 'number'
+          ? (error as { response?: { status?: number } }).response?.status
+          : null;
+      const messageRaw =
+        typeof (error as { response?: { data?: { message?: unknown } } })?.response?.data?.message === 'string'
+          ? ((error as { response?: { data?: { message?: string } } }).response?.data?.message || '')
+          : '';
+      const message = messageRaw.toLowerCase();
+
+      if (status === 400 && message.includes('already')) {
         setScanStatus('already_checked_in');
       } else {
         setScanStatus('error');

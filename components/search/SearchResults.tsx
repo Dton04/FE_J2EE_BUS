@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { tripService } from '../../services/tripService';
 import TripCard from '@/components/search/TripCard';
+import { provinceService, type ProvinceResponse } from '@/services/provinceService';
 
 const PROMO_TAGS = [
   { id: 1, label: 'LUỒNG VÉ CHỐT DEAL', bg: 'bg-blue-500' },
@@ -11,17 +12,6 @@ const PROMO_TAGS = [
   { id: 4, label: 'Xe có GPS xem vị trí xe', bg: 'bg-cyan-500' },
   { id: 5, label: 'Thêm chuyến chờ bạn', bg: 'bg-gray-600' },
 ];
-
-const LOCATION_MAP: Record<string, number> = {
-  'Hà Nội': 1,
-  'Hồ Chí Minh': 2,
-  'Sài Gòn': 2,
-  'Đà Nẵng': 3,
-  'Nha Trang': 4,
-  'Đà Lạt': 5,
-  'Hải Phòng': 6,
-  'Cần Thơ': 7,
-};
 
 export default function SearchResults() {
   const searchParams = useSearchParams();
@@ -43,8 +33,43 @@ export default function SearchResults() {
         const fromIdParam = searchParams.get('fromId');
         const toIdParam = searchParams.get('toId');
 
-        const originId = fromIdParam ? parseInt(fromIdParam) : (LOCATION_MAP[fromStr] || 1);
-        const destinationId = toIdParam ? parseInt(toIdParam) : (LOCATION_MAP[toStr] || 4);
+        const parsePositiveInt = (value: string | null) => {
+          if (!value) return null;
+          const n = Number(value);
+          if (!Number.isFinite(n) || n <= 0) return null;
+          return Math.floor(n);
+        };
+
+        const normalize = (value: string) => value.trim().toLowerCase();
+
+        const resolveProvinceId = (provinces: ProvinceResponse[], query: string): number | null => {
+          const q = normalize(query);
+          if (!q) return null;
+          const exactName = provinces.find((p) => normalize(p.name) === q);
+          if (exactName) return exactName.id;
+          const includesName = provinces.find((p) => normalize(p.name).includes(q));
+          if (includesName) return includesName.id;
+          return null;
+        };
+
+        const originIdFromQuery = parsePositiveInt(fromIdParam);
+        const destinationIdFromQuery = parsePositiveInt(toIdParam);
+
+        let originId = originIdFromQuery;
+        let destinationId = destinationIdFromQuery;
+
+        if (!originId || !destinationId) {
+          const provinces = await provinceService.getAllProvinces();
+          const list = Array.isArray(provinces) ? provinces : [];
+          if (!originId) originId = resolveProvinceId(list, fromStr);
+          if (!destinationId) destinationId = resolveProvinceId(list, toStr);
+        }
+
+        if (!originId || !destinationId) {
+          setTrips([]);
+          setError('Không xác định được bến xe từ điểm đi/điểm đến. Vui lòng chọn lại.');
+          return;
+        }
 
         const data = await tripService.searchTrips(originId, destinationId, dateStr);
         
