@@ -2,6 +2,7 @@ import { api } from './api';
 
 export interface UserProfile {
   id?: number;
+  user_id?: number;
   full_name?: string;
   name?: string;
   email?: string;
@@ -43,7 +44,12 @@ export const authService = {
   },
   updateProfile: async (payload: { full_name?: string; phone?: string }) => {
     const response = await api.put('/users/profile', payload);
-    return unwrapData<UserProfile>(response.data);
+    const profile = unwrapData<UserProfile>(response.data);
+    return {
+      ...profile,
+      id: profile.id || profile.user_id,
+      phone: profile.phone || profile.phone_number || '',
+    };
   },
   changePassword: async (oldPassword: string, newPassword: string) => {
     const response = await api.put('/auth/change-password', {

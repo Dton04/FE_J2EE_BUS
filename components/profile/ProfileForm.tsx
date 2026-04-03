@@ -51,6 +51,8 @@ export default function ProfileForm() {
       setUserProfile(refreshed);
       setFullName(refreshed.full_name || fullName);
       setPhone(refreshed.phone || phone);
+      setBirthDate(refreshed.birth_date || birthDate);
+      setGender(refreshed.gender || gender);
       setMessage({ type: 'success', text: 'Cập nhật hồ sơ thành công.' });
     } catch (error: unknown) {
       const responseMessage =
