@@ -42,6 +42,7 @@ export default function TripCard({ trip }: { trip: TripProps }) {
   const [stopsData, setStopsData] = useState<unknown>(null);
   const [isSeatModalOpen, setIsSeatModalOpen] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'VNPAY' | 'WALLET'>('VNPAY');
   const [isSeatMapLoading, setIsSeatMapLoading] = useState(false);
   const [seatMapError, setSeatMapError] = useState<string | null>(null);
   const [seatMaps, setSeatMaps] = useState<Record<number, SeatMap>>({});
@@ -167,6 +168,7 @@ export default function TripCard({ trip }: { trip: TripProps }) {
     setActiveLegTripId(tripLegs.length ? tripLegs[0].tripId : null);
     setIsSeatModalOpen(true);
     setPassengerCount(1);
+    setPaymentMethod('VNPAY');
 
     let nextCustomerName =
       (typeof userProfile?.full_name === 'string' && userProfile.full_name.trim()) ||
@@ -320,15 +322,26 @@ export default function TripCard({ trip }: { trip: TripProps }) {
       try {
         const payment = await paymentService.createPayment({
           booking_id: booking.id,
-          payment_method: 'VNPAY',
+          payment_method: paymentMethod,
         });
+
+        if (paymentMethod === 'WALLET') {
+          alert('Thanh toán thành công bằng Ví cá nhân!');
+          if (isAuthenticated) {
+            router.push('/profile/orders');
+          } else {
+            closeSeatSelection();
+          }
+          return;
+        }
+
         // Redirect to gateway
         window.location.href = payment.payment_url;
         return;
-      } catch (payErr: unknown) {
+      } catch (payErr: any) {
         console.error('Create payment failed', payErr);
         closeSeatSelection();
-        alert('Không thể khởi tạo thanh toán. Vui lòng thử lại hoặc thanh toán tiền mặt tại quầy nếu được hỗ trợ.');
+        alert(payErr?.response?.data?.message || 'Không thể khởi tạo thanh toán. Vui lòng thử lại.');
         if (isAuthenticated) {
           router.push('/profile/orders');
         }
@@ -655,14 +668,41 @@ export default function TripCard({ trip }: { trip: TripProps }) {
                       )}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={handleConfirmBooking}
-                      disabled={isBooking || isSeatMapLoading || !customerName.trim() || !customerPhone.trim()}
-                      className="bg-[#FFD333] hover:bg-yellow-400 text-gray-900 font-bold px-6 py-2 rounded-lg transition disabled:opacity-50"
-                    >
-                      {isBooking ? 'Đang đặt...' : 'Tiếp tục đặt vé'}
-                    </button>
+                    <div className="flex flex-col items-end gap-3">
+                      <div className="flex items-center gap-4 text-sm font-medium">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input 
+                            type="radio" 
+                            name="paymentMethod" 
+                            value="VNPAY" 
+                            checked={paymentMethod === 'VNPAY'}
+                            onChange={() => setPaymentMethod('VNPAY')}
+                            className="w-4 h-4 text-blue-600"
+                          />
+                          VNPAY
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input 
+                            type="radio" 
+                            name="paymentMethod" 
+                            value="WALLET" 
+                            checked={paymentMethod === 'WALLET'}
+                            onChange={() => setPaymentMethod('WALLET')}
+                            className="w-4 h-4 text-blue-600"
+                          />
+                          Ví cá nhân
+                        </label>
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={handleConfirmBooking}
+                        disabled={isBooking || isSeatMapLoading || !customerName.trim() || !customerPhone.trim()}
+                        className="bg-[#FFD333] hover:bg-yellow-400 text-gray-900 font-bold px-6 py-2 rounded-lg transition disabled:opacity-50"
+                      >
+                        {isBooking ? 'Đang đặt...' : (paymentMethod === 'WALLET' ? 'Thanh toán bằng Ví' : 'Tiếp tục đặt vé')}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

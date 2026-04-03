@@ -14,6 +14,7 @@ export default function ProfileSidebar() {
     { id: 'rewards', label: 'Điểm thưởng của tôi', icon: Star, href: '#' },
     { id: 'orders', label: 'Đơn hàng của tôi', icon: FileText, href: '/profile/orders' },
     { id: 'offers', label: 'Ưu đãi', icon: Tag, href: '#' },
+    { id: 'wallet', label: 'Ví của tôi', icon: CreditCard, href: '/profile/wallet' },
     { id: 'referral', label: 'Giới thiệu nhận quà', icon: Gift, badge: 'Mới', href: '#' },
     { id: 'cards', label: 'Quản lý thẻ', icon: CreditCard, href: '#' },
     { id: 'reviews', label: 'Đánh giá chuyến đi', icon: Edit3, href: '#' },
