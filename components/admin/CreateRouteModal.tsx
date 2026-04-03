@@ -73,9 +73,9 @@ export default function CreateRouteModal({ isOpen, onClose, onSuccess }: CreateR
     } catch (err: unknown) {
       const message =
         typeof err === 'object' &&
-        err !== null &&
-        'response' in err &&
-        typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === 'string'
+          err !== null &&
+          'response' in err &&
+          typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === 'string'
           ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
           : 'Có lỗi xảy ra khi tạo chuyến xe';
       setError(message || 'Có lỗi xảy ra khi tạo chuyến xe');
@@ -195,7 +195,7 @@ export default function CreateRouteModal({ isOpen, onClose, onSuccess }: CreateR
                   Đang tạo chuyến...
                 </>
               ) : (
-                '✅ Tạo chuyến xe'
+                'Tạo chuyến xe'
               )}
             </button>
           </div>

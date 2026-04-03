@@ -33,6 +33,7 @@ export interface MyBookingResponse {
 export interface BookingTicketItem {
   seat: string;
   passenger: string;
+  ticket_code: string;
 }
 
 export interface BookingDetailResponse {

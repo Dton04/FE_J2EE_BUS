@@ -94,4 +94,14 @@ export const tripService = {
       throw error;
     }
   },
+
+  updateTripStatus: async (id: number, status: string) => {
+    try {
+      const response = await api.patch(`/admin/trips/${id}/status`, { status });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating trip status:', error);
+      throw error;
+    }
+  },
 };

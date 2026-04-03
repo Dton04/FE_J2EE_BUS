@@ -1,8 +1,8 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, Bus, Users, Settings, LogOut, 
+import {
+  LayoutDashboard, Bus, Users, Settings, LogOut,
   Route as RouteIcon, BarChart3, ScanLine, MapPin
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -20,14 +20,15 @@ export default function AdminSidebar() {
   };
 
   const allMenuItems = [
-    { name: 'Dashboard',        href: '/admin',            icon: LayoutDashboard, roles: ['ADMIN'] },
-    { name: 'Quản lý Chuyến',   href: '/admin/trips',      icon: Bus,             roles: ['ADMIN'] },
-    { name: 'Tuyến & Giá',      href: '/admin/routes',     icon: RouteIcon,       roles: ['ADMIN'] },
-    { name: 'Bến xe',           href: '/admin/stations',   icon: MapPin,          roles: ['ADMIN'] },
-    { name: 'Khách hàng',       href: '/admin/users',      icon: Users,           roles: ['ADMIN'] },
-    { name: 'Thống kê',         href: '/admin/statistics', icon: BarChart3,       roles: ['ADMIN'] },
-    { name: 'Check-in Vé',      href: '/admin/check-in',   icon: ScanLine,        roles: ['ADMIN', 'STAFF', 'DRIVER'] },
-    { name: 'Cài đặt',          href: '/admin/settings',   icon: Settings,        roles: ['ADMIN'] },
+    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, roles: ['ADMIN'] },
+    { name: 'Quản lý Chuyến', href: '/admin/trips', icon: Bus, roles: ['ADMIN'] },
+    { name: 'Tuyến & Giá', href: '/admin/routes', icon: RouteIcon, roles: ['ADMIN'] },
+    { name: 'Bến xe', href: '/admin/stations', icon: MapPin, roles: ['ADMIN'] },
+    { name: 'Xe', href: '/admin/buses', icon: Bus, roles: ['ADMIN'] },
+    { name: 'Khách hàng', href: '/admin/users', icon: Users, roles: ['ADMIN'] },
+    { name: 'Thống kê', href: '/admin/statistics', icon: BarChart3, roles: ['ADMIN'] },
+    { name: 'Check-in Vé', href: '/admin/check-in', icon: ScanLine, roles: ['ADMIN', 'STAFF', 'DRIVER'] },
+    { name: 'Cài đặt', href: '/admin/settings', icon: Settings, roles: ['ADMIN'] },
   ];
 
   const menuItems = allMenuItems.filter(item =>
@@ -48,10 +49,9 @@ export default function AdminSidebar() {
       {/* Role badge */}
       {role && (
         <div className="mx-4 mt-4 px-3 py-2 rounded-lg bg-gray-50 border border-gray-100 flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full shrink-0 ${
-            role === 'ADMIN' ? 'bg-blue-500' :
+          <div className={`w-2 h-2 rounded-full shrink-0 ${role === 'ADMIN' ? 'bg-blue-500' :
             role === 'STAFF' ? 'bg-green-500' : 'bg-yellow-500'
-          }`} />
+            }`} />
           <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{role}</span>
         </div>
       )}
@@ -73,7 +73,7 @@ export default function AdminSidebar() {
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
                 ? 'bg-[#2474E5] text-white shadow-sm font-bold'
                 : 'text-gray-500 hover:bg-gray-50 hover:text-[#2474E5]'
-              }`}
+                }`}
             >
               <Icon size={20} className={isActive ? 'text-white' : 'text-gray-400'} />
               {item.name}
@@ -91,11 +91,10 @@ export default function AdminSidebar() {
             return (
               <Link
                 href="/admin/check-in"
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all font-bold ${
-                  isActive
-                    ? 'bg-green-500 text-white shadow-sm'
-                    : 'text-green-700 bg-green-50 hover:bg-green-100 border border-green-200'
-                }`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all font-bold ${isActive
+                  ? 'bg-green-500 text-white shadow-sm'
+                  : 'text-green-700 bg-green-50 hover:bg-green-100 border border-green-200'
+                  }`}
               >
                 <ScanLine size={20} className={isActive ? 'text-white' : 'text-green-600'} />
                 Check-in Vé

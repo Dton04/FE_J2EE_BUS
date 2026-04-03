@@ -34,7 +34,18 @@ interface BackendTrip {
   bus_plate?: string;
   departure_time?: string;
   actual_price?: number | string;
+  status?: string;
 }
+
+const statusMap: Record<string, string> = {
+  SCHEDULED: 'Sắp khởi hành',
+  IN_PROGRESS: 'Đang chạy',
+  COMPLETED: 'Kết thúc',
+  RUNNING: 'Đang chạy',
+  ARRIVED: 'Kết thúc',
+  CANCELLED: 'Đã hủy',
+  DELAYED: 'Chậm trễ'
+};
 
 export default function AdminTripsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -79,7 +90,7 @@ export default function AdminTripsPage() {
           date,
           price: formatPrice(t.actual_price),
           seats: '—',
-          status: 'Sắp khởi hành',
+          status: t.status ? (statusMap[t.status] || 'Sắp khởi hành') : 'Sắp khởi hành',
           departure_time_raw: t.departure_time,
         };
       });
@@ -181,9 +192,12 @@ export default function AdminTripsPage() {
                     <td className="px-6 py-4 text-sm font-bold text-[#2474E5]">{trip.price}</td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-700">{trip.seats}</td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-1 rounded text-[11px] font-bold uppercase ${
+                      <span className={`inline-flex px-2 py-1 rounded text-[11px] font-bold uppercase whitespace-nowrap ${
                         trip.status === 'Đang chạy' ? 'bg-blue-100 text-blue-700' :
-                        trip.status === 'Hết chỗ' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                        trip.status === 'Kết thúc' ? 'bg-gray-100 text-gray-700' :
+                        trip.status === 'Đã hủy' ? 'bg-red-100 text-red-700' :
+                        trip.status === 'Chậm trễ' ? 'bg-orange-100 text-orange-700' :
+                        trip.status === 'Hết chỗ' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
                       }`}>
                         {trip.status}
                       </span>

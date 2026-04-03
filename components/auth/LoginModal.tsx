@@ -45,6 +45,8 @@ export default function LoginModal({ onClose, onSwitchToRegister }: { onClose: (
            // Role-based redirection
            if (profileRes.role === 'ADMIN') {
              router.push('/admin');
+           } else if (profileRes.role === 'STAFF' || profileRes.role === 'DRIVER') {
+             router.push('/staff');
            }
         } catch (e) {
            console.error("Failed to fetch profile", e);

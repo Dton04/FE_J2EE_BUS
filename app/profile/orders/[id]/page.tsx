@@ -132,11 +132,11 @@ export default function ETicketPage({ params }: { params: Promise<{ id: string }
     if (!q) return 0;
     const byName = list.find((s) => (s.name || '').trim().toLowerCase() === q);
     if (byName) return byName.id;
-    const byCity = list.find((s) => (s.city || '').trim().toLowerCase() === q);
+    const byCity = list.find((s) => (s.provinceName || '').trim().toLowerCase() === q);
     if (byCity) return byCity.id;
     const includesName = list.find((s) => (s.name || '').trim().toLowerCase().includes(q));
     if (includesName) return includesName.id;
-    const includesCity = list.find((s) => (s.city || '').trim().toLowerCase().includes(q));
+    const includesCity = list.find((s) => (s.provinceName || '').trim().toLowerCase().includes(q));
     return includesCity?.id || 0;
   };
 
@@ -182,7 +182,7 @@ export default function ETicketPage({ params }: { params: Promise<{ id: string }
       }
 
       const toStation = list.find((s) => s.id === nextToId);
-      const toText = toStation?.city || toStation?.name || '';
+      const toText = toStation?.provinceName || toStation?.name || '';
       const params = new URLSearchParams({
         from: fromStation,
         to: toText,
@@ -232,9 +232,11 @@ export default function ETicketPage({ params }: { params: Promise<{ id: string }
             <div className="border-b-2 border-dashed border-gray-200 w-full absolute top-1/2 left-0"></div>
 
             <div className="mb-10 w-full flex flex-col items-center">
-              <h3 className="text-gray-500 font-bold uppercase tracking-wider text-xs mb-1">Mã chuyến / Đơn hàng</h3>
-              <div className="text-2xl font-black font-mono tracking-tight text-[#2474E5]">
-                {booking_info.booking_code}
+              <h3 className="text-gray-400 font-bold uppercase tracking-[0.2em] text-[10px] mb-2">Mã chuyến / Đơn hàng</h3>
+              <div className="px-6 py-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-200 inline-block">
+                <div className="text-2xl font-black font-mono tracking-wider text-white">
+                  {booking_info.booking_code}
+                </div>
               </div>
             </div>
 
@@ -314,17 +316,30 @@ export default function ETicketPage({ params }: { params: Promise<{ id: string }
               <User className="text-blue-500" /> Thông tin Hành khách & Ghế
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
               {tickets.map((t, index) => (
-                <div key={index} className="border border-gray-200 rounded-xl p-4 flex justify-between items-center bg-gray-50 hover:bg-white hover:border-blue-300 transition-colors">
-                  <div>
-                    <p className="text-xs text-gray-500 font-bold uppercase mb-1">Hành khách</p>
-                    <p className="font-bold text-gray-800 truncate" title={t.passenger}>{t.passenger}</p>
+                <div key={index} className="relative bg-white border-2 border-dashed border-gray-100 rounded-2xl p-5 hover:border-blue-200 hover:bg-blue-50/20 transition-all group shadow-sm">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <Ticket size={20} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Hành khách</p>
+                        <p className="font-bold text-gray-800 text-lg">{t.passenger}</p>
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-blue-600 text-white text-[11px] font-black font-mono shadow-sm">
+                             {t.ticket_code}
+                           </span>
+                           <span className="text-[10px] font-bold text-gray-400">GHẾ: {t.seat}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-500 font-bold uppercase mb-1">Ghế</p>
-                    <p className="font-black text-blue-600 text-xl">{t.seat}</p>
-                  </div>
+                  
+                  {/* Decorative dot */}
+                  <div className="absolute -left-1.5 top-1/2 -mt-1 w-3 h-3 bg-gray-50 rounded-full border border-gray-100"></div>
+                  <div className="absolute -right-1.5 top-1/2 -mt-1 w-3 h-3 bg-gray-50 rounded-full border border-gray-100"></div>
                 </div>
               ))}
             </div>
@@ -403,7 +418,7 @@ export default function ETicketPage({ params }: { params: Promise<{ id: string }
                   <option value={0}>-- Chọn điểm đến --</option>
                   {stations.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.name} ({s.city})
+                      {s.name} ({s.provinceName})
                     </option>
                   ))}
                 </select>

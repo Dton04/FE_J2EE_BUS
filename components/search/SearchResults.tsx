@@ -55,15 +55,16 @@ export default function SearchResults() {
         const originIdFromQuery = parsePositiveInt(fromIdParam);
         const destinationIdFromQuery = parsePositiveInt(toIdParam);
 
-        let originId = originIdFromQuery;
-        let destinationId = destinationIdFromQuery;
+        const provinces = await provinceService.getAllProvinces();
+        const list = Array.isArray(provinces) ? provinces : [];
 
-        if (!originId || !destinationId) {
-          const provinces = await provinceService.getAllProvinces();
-          const list = Array.isArray(provinces) ? provinces : [];
-          if (!originId) originId = resolveProvinceId(list, fromStr);
-          if (!destinationId) destinationId = resolveProvinceId(list, toStr);
-        }
+        const isIdValid = (id: number | null) => id != null && list.some(p => p.id === id);
+
+        let originId = isIdValid(originIdFromQuery) ? originIdFromQuery : null;
+        let destinationId = isIdValid(destinationIdFromQuery) ? destinationIdFromQuery : null;
+
+        if (!originId) originId = resolveProvinceId(list, fromStr);
+        if (!destinationId) destinationId = resolveProvinceId(list, toStr);
 
         if (!originId || !destinationId) {
           setTrips([]);
@@ -71,7 +72,7 @@ export default function SearchResults() {
           return;
         }
 
-        const data = await tripService.searchTrips(originId, destinationId, dateStr);
+        const data = await tripService.searchTrips(originId, destinationId, dateStr, 2, 45);
         
         const formatTime = (iso?: string) => {
           if (!iso) return '';
