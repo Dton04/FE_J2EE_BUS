@@ -16,7 +16,7 @@ export default function ProfileSidebar() {
     { id: 'offers', label: 'Ưu đãi', icon: Tag, href: '#' },
     { id: 'referral', label: 'Giới thiệu nhận quà', icon: Gift, badge: 'Mới', href: '#' },
     { id: 'cards', label: 'Quản lý thẻ', icon: CreditCard, href: '#' },
-    { id: 'reviews', label: 'Đánh giá chuyến đi', icon: Edit3, href: '#' },
+    { id: 'reviews', label: 'Đánh giá chuyến đi', icon: Edit3, href: '/profile/reviews' },
     { id: 'support', label: 'Trung tâm Hỗ trợ', icon: HelpCircle, badge: 'Mới', href: '#' },
     { id: 'feedback', label: 'Góp ý', icon: MessageSquare, href: '#' },
     { id: 'careers', label: 'Vexere tuyển dụng', icon: Briefcase, href: '#' },
