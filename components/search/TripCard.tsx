@@ -8,6 +8,7 @@ import { bookingService } from '../../services/bookingService';
 import { useAuthStore } from '../../store/useAuthStore';
 import { authService } from '../../services/authService';
 import { paymentService } from '../../services/paymentService';
+import { walletService } from '../../services/walletService';
 
 interface TripProps {
   id: string;
@@ -43,6 +44,8 @@ export default function TripCard({ trip }: { trip: TripProps }) {
   const [isSeatModalOpen, setIsSeatModalOpen] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'VNPAY' | 'WALLET'>('VNPAY');
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [isCheckingBalance, setIsCheckingBalance] = useState(false);
   const [isSeatMapLoading, setIsSeatMapLoading] = useState(false);
   const [seatMapError, setSeatMapError] = useState<string | null>(null);
   const [seatMaps, setSeatMaps] = useState<Record<number, SeatMap>>({});
@@ -169,6 +172,7 @@ export default function TripCard({ trip }: { trip: TripProps }) {
     setIsSeatModalOpen(true);
     setPassengerCount(1);
     setPaymentMethod('VNPAY');
+    setWalletBalance(null);
 
     let nextCustomerName =
       (typeof userProfile?.full_name === 'string' && userProfile.full_name.trim()) ||
@@ -239,6 +243,7 @@ export default function TripCard({ trip }: { trip: TripProps }) {
     setSeatMaps({});
     setSelectedSeatsByTripId({});
     setActiveLegTripId(null);
+    setWalletBalance(null);
   };
 
   const currentSeatMap = activeLegTripId ? seatMaps[activeLegTripId] : undefined;
@@ -356,6 +361,27 @@ export default function TripCard({ trip }: { trip: TripProps }) {
       alert(apiMessage);
     } finally {
       setIsBooking(false);
+    }
+  };
+
+  const handlePaymentMethodChange = async (method: 'VNPAY' | 'WALLET') => {
+    setPaymentMethod(method);
+    if (method === 'WALLET' && isAuthenticated) {
+      setIsCheckingBalance(true);
+      try {
+        // Dùng getWallet() đã hoạt động ổn, lấy balance về số
+        const walletData = await walletService.getWallet();
+        const balance = typeof walletData?.balance === 'number'
+          ? walletData.balance
+          : parseFloat(walletData?.balance ?? '0') || 0;
+        setWalletBalance(balance);
+      } catch {
+        setWalletBalance(null);
+      } finally {
+        setIsCheckingBalance(false);
+      }
+    } else {
+      setWalletBalance(null);
     }
   };
 
@@ -676,7 +702,7 @@ export default function TripCard({ trip }: { trip: TripProps }) {
                             name="paymentMethod" 
                             value="VNPAY" 
                             checked={paymentMethod === 'VNPAY'}
-                            onChange={() => setPaymentMethod('VNPAY')}
+                            onChange={() => handlePaymentMethodChange('VNPAY')}
                             className="w-4 h-4 text-blue-600"
                           />
                           VNPAY
@@ -687,18 +713,39 @@ export default function TripCard({ trip }: { trip: TripProps }) {
                             name="paymentMethod" 
                             value="WALLET" 
                             checked={paymentMethod === 'WALLET'}
-                            onChange={() => setPaymentMethod('WALLET')}
+                            onChange={() => handlePaymentMethodChange('WALLET')}
                             className="w-4 h-4 text-blue-600"
                           />
                           Ví cá nhân
                         </label>
                       </div>
+
+                      {paymentMethod === 'WALLET' && (
+                        <div className={`text-xs px-3 py-2 rounded-lg w-full text-right ${
+                          isCheckingBalance ? 'bg-gray-50 text-gray-500' :
+                          walletBalance === null ? 'bg-yellow-50 text-yellow-700' :
+                          walletBalance >= trip.price * Math.max(1, Math.min(4, passengerCount))
+                            ? 'bg-green-50 text-green-700 font-medium'
+                            : 'bg-red-50 text-red-700 font-medium'
+                        }`}>
+                          {isCheckingBalance ? 'Đang kiểm tra số dư...' :
+                           walletBalance === null ? '⚠️ Không thể lấy số dư. Vẫn có thể thử thanh toán, hệ thống sẽ kiểm tra lại.' :
+                           walletBalance >= trip.price * Math.max(1, Math.min(4, passengerCount))
+                             ? `✅ Số dư ví: ${walletBalance.toLocaleString('vi-VN')}đ — Đủ để thanh toán`
+                             : `❌ Số dư ví: ${walletBalance.toLocaleString('vi-VN')}đ — Thiếu ${(trip.price * Math.max(1, Math.min(4, passengerCount)) - walletBalance).toLocaleString('vi-VN')}đ. Vui lòng nạp thêm hoặc chọn VNPAY.`
+                          }
+                        </div>
+                      )}
                       
                       <button
                         type="button"
                         onClick={handleConfirmBooking}
-                        disabled={isBooking || isSeatMapLoading || !customerName.trim() || !customerPhone.trim()}
-                        className="bg-[#FFD333] hover:bg-yellow-400 text-gray-900 font-bold px-6 py-2 rounded-lg transition disabled:opacity-50"
+                        disabled={
+                          isBooking || isSeatMapLoading || !customerName.trim() || !customerPhone.trim() ||
+                          (paymentMethod === 'WALLET' && isCheckingBalance) ||
+                          (paymentMethod === 'WALLET' && walletBalance !== null && walletBalance < trip.price * Math.max(1, Math.min(4, passengerCount)))
+                        }
+                        className="bg-[#FFD333] hover:bg-yellow-400 text-gray-900 font-bold px-6 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isBooking ? 'Đang đặt...' : (paymentMethod === 'WALLET' ? 'Thanh toán bằng Ví' : 'Tiếp tục đặt vé')}
                       </button>

@@ -9,5 +9,8 @@ export const walletService = {
   },
   deposit(amount: number) {
     return api.post('/wallet/deposit', { amount }).then(res => res.data);
+  },
+  checkBalance(amount: number): Promise<{ sufficient: boolean; balance: number }> {
+    return api.get('/wallet/balance-check', { params: { amount } }).then(res => res.data);
   }
 };
