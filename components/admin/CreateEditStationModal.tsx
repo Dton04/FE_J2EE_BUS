@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { X, Loader2, MapPin } from 'lucide-react';
 import { stationService, type StationResponse } from '@/services/stationService';
+import { provinceService, type ProvinceResponse } from '@/services/provinceService';
 
 interface Props {
   isOpen: boolean;
@@ -12,19 +13,24 @@ interface Props {
 
 export default function CreateEditStationModal({ isOpen, onClose, onSuccess, station }: Props) {
   const [name, setName] = useState('');
-  const [city, setCity] = useState('');
+  const [provinceId, setProvinceId] = useState<number | ''>('');
   const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [provinces, setProvinces] = useState<ProvinceResponse[]>([]);
+
+  useEffect(() => {
+    provinceService.getAllProvinces().then(setProvinces).catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (station) {
       setName(station.name || '');
-      setCity(station.city || '');
+      setProvinceId(station.provinceId || '');
       setAddress(station.address || '');
     } else {
       setName('');
-      setCity('');
+      setProvinceId('');
       setAddress('');
     }
   }, [station]);
@@ -34,16 +40,16 @@ export default function CreateEditStationModal({ isOpen, onClose, onSuccess, sta
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!name.trim() || !city.trim() || !address.trim()) {
-      setError('Vui lòng nhập đủ tên, thành phố và địa chỉ.');
+    if (!name.trim() || provinceId === '' || !address.trim()) {
+      setError('Vui lòng nhập đủ tên, tỉnh thành và địa chỉ.');
       return;
     }
     setLoading(true);
     try {
       if (station) {
-        await stationService.updateStation(station.id, { name: name.trim(), city: city.trim(), address: address.trim() });
+        await stationService.updateStation(station.id, { name: name.trim(), provinceId: Number(provinceId), address: address.trim() });
       } else {
-        await stationService.createStation({ name: name.trim(), city: city.trim(), address: address.trim() });
+        await stationService.createStation({ name: name.trim(), provinceId: Number(provinceId), address: address.trim() });
       }
       onSuccess();
       onClose();
@@ -86,14 +92,18 @@ export default function CreateEditStationModal({ isOpen, onClose, onSuccess, sta
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Thành phố</label>
-            <input
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="VD: TP. Hồ Chí Minh"
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-blue-400 transition text-sm"
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tỉnh/Thành phố</label>
+            <select
+              value={provinceId}
+              onChange={(e) => setProvinceId(Number(e.target.value))}
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-blue-400 transition text-sm bg-white"
               required
-            />
+            >
+              <option value="" disabled>Chọn Tỉnh/Thành phố</option>
+              {provinces.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
           </div>
 
           <div>

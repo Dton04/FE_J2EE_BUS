@@ -3,7 +3,8 @@ import { api } from './api';
 export interface StationResponse {
   id: number;
   name: string;
-  city: string;
+  provinceId: number;
+  provinceName: string;
   address: string;
 }
 
@@ -30,11 +31,11 @@ export const stationService = {
     const res = await api.get('/admin/stations');
     return res.data as StationResponse[];
   },
-  createStation: async (payload: { name: string; city: string; address: string }) => {
+  createStation: async (payload: { name: string; provinceId: number; address: string }) => {
     const res = await api.post('/admin/stations', payload);
     return res.data as StationResponse;
   },
-  updateStation: async (id: number, payload: { name: string; city: string; address: string }) => {
+  updateStation: async (id: number, payload: { name: string; provinceId: number; address: string }) => {
     const res = await api.put(`/admin/stations/${id}`, payload);
     return res.data as StationResponse;
   },

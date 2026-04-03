@@ -1,8 +1,9 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { QrCode, CheckCircle2, XCircle, Search, Bus, Clock, User, ScanLine, Ticket } from 'lucide-react';
-
+import Link from 'next/link';
+import { QrCode, CheckCircle2, XCircle, Search, Clock, User, ScanLine, Ticket, Users, ChevronRight } from 'lucide-react';
 import { ticketService } from '@/services/ticketService';
+import { tripService } from '@/services/tripService';
 
 // Types matching TicketResponse from BE
 type TicketInfo = {
@@ -14,42 +15,67 @@ type TicketInfo = {
   ticketStatus: string;
   checkInStatus: string;
 };
+
+interface TripItem {
+  id: number;
+  route_name?: string;
+  bus_plate?: string;
+  departure_time?: string;
+}
 export default function CheckInPage() {
   const [ticketId, setTicketId] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   // Trạng thái vé sau khi quét
   const [scannedTicket, setScannedTicket] = useState<TicketInfo | null>(null);
   const [scanStatus, setScanStatus] = useState<'idle' | 'success' | 'error' | 'already_checked_in'>('idle');
-  
+  const [trips, setTrips] = useState<TripItem[]>([]);
+  const [selectedTripId, setSelectedTripId] = useState<number | ''>('');
+
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Focus input ngay khi load để hứng event từ máy quét barcode (nếu có)
+  // Load danh sách chuyến để hiển thị chọn chuyến
   useEffect(() => {
+    tripService.getAllTrips()
+      .then((data) => {
+        const list = Array.isArray(data) ? data as TripItem[] : [];
+        setTrips(list);
+      })
+      .catch(console.error);
     inputRef.current?.focus();
   }, []);
 
   const handleCheckIn = async (id: string) => {
     if (!id.trim()) return;
-    
+
     setLoading(true);
     setScanStatus('idle');
     setScannedTicket(null);
-    
+
     try {
       const response = await ticketService.checkIn(id);
-      
+
       setScannedTicket(response);
-      
+
       if (response.checkInStatus === 'ON_BOARD') {
         setScanStatus('success');
       } else {
         setScanStatus('already_checked_in');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Check-in error:', error);
-      if (error.response?.status === 400 && error.response.data?.message?.toLowerCase().includes('already')) {
+      const status =
+        typeof (error as { response?: { status?: unknown } })?.response?.status === 'number'
+          ? (error as { response?: { status?: number } }).response?.status
+          : null;
+      const messageRaw =
+        typeof (error as { response?: { data?: { message?: unknown } } })?.response?.data?.message === 'string'
+          ? ((error as { response?: { data?: { message?: string } } }).response?.data?.message || '')
+          : '';
+      const message = messageRaw.toLowerCase();
+
+      if (status === 400 && message.includes('already')) {
         setScanStatus('already_checked_in');
       } else {
         setScanStatus('error');
@@ -84,18 +110,49 @@ export default function CheckInPage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-800">
           <QrCode className="text-blue-600" />
-          Soát vé điện tử (Check-in)
+          Soat ve dien tu (Check-in)
         </h1>
         <p className="text-gray-500">
-          Sử dụng máy quét mã vạch, quét QR qua Camera, hoặc nhập mã vé thủ công để cập nhật trạng thái lên xe.
+          Su dung may quet ma vach, quet QR qua Camera, hoac nhap ma ve thu cong de cap nhat trang thai len xe.
         </p>
       </div>
 
+      {/* Trip Selector Card */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+        <h2 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+          <Users size={16} className="text-blue-500" /> Chọn chuyến xe hôm nay
+        </h2>
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <select
+            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium outline-none focus:border-blue-400 transition bg-white"
+            value={selectedTripId}
+            onChange={(e) => setSelectedTripId(e.target.value ? Number(e.target.value) : '')}
+          >
+            <option value="">-- Chọn chuyến để xem hành khách --</option>
+            {trips.map(t => (
+              <option key={t.id} value={t.id}>
+                [{t.id}] {t.route_name || 'Chuyến xe'} · {t.bus_plate || ''}
+                {t.departure_time ? ' · ' + new Date(t.departure_time).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : ''}
+              </option>
+            ))}
+          </select>
+          {selectedTripId !== '' && (
+            <Link
+              href={`/admin/trips/${selectedTripId}/passengers`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition shadow-md whitespace-nowrap"
+            >
+              <Users size={16} /> Danh sách hành khách
+              <ChevronRight size={16} />
+            </Link>
+          )}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
+
         {/* Cột trái: Form & Camera */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-6">
-          
+
           {/* Form nhập tay / hứng máy quét */}
           <form onSubmit={handleManualSubmit} className="flex gap-3">
             <div className="relative flex-1">
@@ -144,7 +201,7 @@ export default function CheckInPage() {
                   <p className="font-medium text-gray-600">Camera chưa được bật</p>
                   <p className="text-sm">Nhấn nút bên dưới để cấp quyền và mở camera nội bộ</p>
                 </div>
-                <button 
+                <button
                   onClick={simulateCameraScan}
                   className="mt-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors shadow-sm flex items-center gap-2"
                 >
@@ -164,7 +221,7 @@ export default function CheckInPage() {
               Kết quả kiểm tra
             </h2>
           </div>
-          
+
           <div className="flex-1 p-6 flex flex-col justify-center">
             {scanStatus === 'idle' && !loading && (
               <div className="text-center text-gray-400 flex flex-col items-center gap-3">
@@ -193,11 +250,10 @@ export default function CheckInPage() {
             {scannedTicket && (scanStatus === 'success' || scanStatus === 'already_checked_in') && (
               <div className="space-y-6 animate-in slide-in-from-bottom-4 fade-in duration-300">
                 {/* Thông báo trạng thái */}
-                <div className={`p-4 rounded-xl flex items-start gap-3 ${
-                  scanStatus === 'success' 
-                    ? 'bg-green-50 text-green-700 border border-green-200' 
-                    : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                }`}>
+                <div className={`p-4 rounded-xl flex items-start gap-3 ${scanStatus === 'success'
+                  ? 'bg-green-50 text-green-700 border border-green-200'
+                  : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                  }`}>
                   {scanStatus === 'success' ? (
                     <CheckCircle2 size={24} className="flex-shrink-0 mt-0.5 text-green-500" />
                   ) : (
@@ -221,22 +277,22 @@ export default function CheckInPage() {
                       #{scannedTicket.id}
                     </span>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-y-4 gap-x-6">
                     <div>
-                      <span className="text-gray-500 text-xs flex items-center gap-1 mb-1"><User size={12}/> Hành khách</span>
+                      <span className="text-gray-500 text-xs flex items-center gap-1 mb-1"><User size={12} /> Hành khách</span>
                       <p className="font-bold text-gray-800">{scannedTicket.passengerName}</p>
                     </div>
                     <div>
-                      <span className="text-gray-500 text-xs flex items-center gap-1 mb-1"><Ticket size={12}/> Số ghế</span>
+                      <span className="text-gray-500 text-xs flex items-center gap-1 mb-1"><Ticket size={12} /> Số ghế</span>
                       <p className="font-bold text-blue-600 text-lg">{scannedTicket.seatNumber}</p>
                     </div>
                     <div>
-                      <span className="text-gray-500 text-xs flex items-center gap-1 mb-1"><Search size={12}/> Số điện thoại</span>
+                      <span className="text-gray-500 text-xs flex items-center gap-1 mb-1"><Search size={12} /> Số điện thoại</span>
                       <p className="font-bold text-gray-800">{scannedTicket.phone || 'N/A'}</p>
                     </div>
                     <div>
-                      <span className="text-gray-500 text-xs flex items-center gap-1 mb-1"><Ticket size={12}/> Giá vé</span>
+                      <span className="text-gray-500 text-xs flex items-center gap-1 mb-1"><Ticket size={12} /> Giá vé</span>
                       <p className="font-bold text-gray-800">{scannedTicket.price?.toLocaleString('vi-VN') || 0} đ</p>
                     </div>
                   </div>

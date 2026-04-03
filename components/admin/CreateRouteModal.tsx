@@ -28,7 +28,7 @@ export default function CreateRouteModal({ isOpen, onClose, onSuccess }: CreateR
     route_id: '',
     bus_id: '',
     departure_time: '',
-    price_modifier: 0,
+    price_modifier: 1.0,
   });
   const [routes, setRoutes] = useState<RouteItem[]>([]);
   const [buses, setBuses] = useState<BusResponse[]>([]);
@@ -69,13 +69,13 @@ export default function CreateRouteModal({ isOpen, onClose, onSuccess }: CreateR
       onSuccess();
       onClose();
       // Reset form
-      setFormData({ route_id: '', bus_id: '', departure_time: '', price_modifier: 0 });
+      setFormData({ route_id: '', bus_id: '', departure_time: '', price_modifier: 1.0 });
     } catch (err: unknown) {
       const message =
         typeof err === 'object' &&
-        err !== null &&
-        'response' in err &&
-        typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === 'string'
+          err !== null &&
+          'response' in err &&
+          typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === 'string'
           ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
           : 'Có lỗi xảy ra khi tạo chuyến xe';
       setError(message || 'Có lỗi xảy ra khi tạo chuyến xe');
@@ -169,18 +169,18 @@ export default function CreateRouteModal({ isOpen, onClose, onSuccess }: CreateR
           {/* Price modifier */}
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-              <DollarSign size={15} className="text-purple-500" /> Hệ số giá (price_modifier)
+              <DollarSign size={15} className="text-purple-500" /> Hệ số giá
             </label>
             <input
               type="number"
               step="0.01"
               min="0"
-              placeholder="VD: 1.0 (giá gốc), 1.3 (tăng 30%)"
+              placeholder="VD: 1.0 (Giữ nguyên giá)"
               className="w-full border border-gray-200 rounded-lg px-4 py-2.5 outline-none focus:border-blue-400 transition text-sm"
               value={formData.price_modifier}
               onChange={(e) => setFormData({ ...formData, price_modifier: Number(e.target.value) })}
             />
-            <p className="text-[11px] text-gray-400">0 = mặc định theo tuyến. Nhập 1.3 để tăng giá 30%.</p>
+            <p className="text-[11px] text-gray-500 font-medium">Để 1.0 là giữ nguyên giá gốc của tuyến. Nhập 1.3 = tăng 30%.</p>
           </div>
 
           <div className="pt-2">
@@ -195,7 +195,7 @@ export default function CreateRouteModal({ isOpen, onClose, onSuccess }: CreateR
                   Đang tạo chuyến...
                 </>
               ) : (
-                '✅ Tạo chuyến xe'
+                'Tạo chuyến xe'
               )}
             </button>
           </div>

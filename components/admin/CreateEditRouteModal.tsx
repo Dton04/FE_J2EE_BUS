@@ -49,8 +49,8 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
       
       if (editData) {
         setFormData({
-          departure: editData.departure || editData.origin_station?.city || '',
-          destination: editData.destination || editData.destination_station?.city || '',
+          departure: editData.departure || editData.origin_station?.provinceName || '',
+          destination: editData.destination || editData.destination_station?.provinceName || '',
           distance: editData.distance,
           duration: editData.duration,
           price: editData.price || editData.base_price || 0,
@@ -124,7 +124,7 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
     if (station) {
       setFormData({
         ...formData,
-        [type]: station.city,
+        [type]: station.provinceName,
         [`${type === 'departure' ? 'origin' : 'destination'}_station_id`]: station.id
       });
     }
@@ -176,12 +176,12 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
                 required
                 disabled={stationsLoading}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm text-gray-700 appearance-none bg-white font-medium disabled:bg-gray-50"
-                value={stations.find(s => s.city === formData.departure)?.id || 0}
+                value={stations.find(s => s.provinceName === formData.departure)?.id || 0}
                 onChange={(e) => handleStationChange('departure', Number(e.target.value))}
               >
                 <option value="0">-- Chọn điểm đi --</option>
                 {stations.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.city})</option>
+                  <option key={s.id} value={s.id}>{s.name} ({s.provinceName})</option>
                 ))}
               </select>
             </div>
@@ -195,12 +195,12 @@ export default function CreateEditRouteModal({ isOpen, onClose, onSuccess, editD
                 required
                 disabled={stationsLoading}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition text-sm text-gray-700 appearance-none bg-white font-medium disabled:bg-gray-50"
-                value={stations.find(s => s.city === formData.destination)?.id || 0}
+                value={stations.find(s => s.provinceName === formData.destination)?.id || 0}
                 onChange={(e) => handleStationChange('destination', Number(e.target.value))}
               >
                 <option value="0">-- Chọn điểm đến --</option>
                 {stations.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.city})</option>
+                  <option key={s.id} value={s.id}>{s.name} ({s.provinceName})</option>
                 ))}
               </select>
             </div>

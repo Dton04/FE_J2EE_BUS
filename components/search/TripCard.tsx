@@ -49,6 +49,7 @@ export default function TripCard({ trip }: { trip: TripProps }) {
   const [selectedSeatsByTripId, setSelectedSeatsByTripId] = useState<Record<number, string[]>>({});
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [passengerCount, setPassengerCount] = useState(1);
 
   const formatPrice = (p: number) => p.toLocaleString('vi-VN') + 'đ';
   const formatSeatCount = (value: number) => (value === 1 ? '1 ghế' : `${value} ghế`);
@@ -165,6 +166,7 @@ export default function TripCard({ trip }: { trip: TripProps }) {
     setSelectedSeatsByTripId({});
     setActiveLegTripId(tripLegs.length ? tripLegs[0].tripId : null);
     setIsSeatModalOpen(true);
+    setPassengerCount(1);
 
     let nextCustomerName =
       (typeof userProfile?.full_name === 'string' && userProfile.full_name.trim()) ||
@@ -266,7 +268,7 @@ export default function TripCard({ trip }: { trip: TripProps }) {
       }
 
       const nextCount = existing.length + 1;
-      const maxSeats = tripLegs.length > 1 ? 1 : 4;
+      const maxSeats = Math.max(1, Math.min(4, passengerCount));
       if (nextCount > maxSeats) {
         return prev;
       }
@@ -293,11 +295,13 @@ export default function TripCard({ trip }: { trip: TripProps }) {
       return;
     }
 
+    const requiredSeatsPerLeg = Math.max(1, Math.min(4, passengerCount));
+
     const legsPayload: Array<{ trip_id: number; seat_number: string }> = [];
     for (const leg of tripLegs) {
       const seats = selectedSeatsByTripId[leg.tripId] || [];
-      if (!seats.length) {
-        alert('Vui lòng chọn ghế cho tất cả các chặng.');
+      if (seats.length !== requiredSeatsPerLeg) {
+        alert(`Vui lòng chọn đúng ${formatSeatCount(requiredSeatsPerLeg)} cho tất cả các chặng.`);
         return;
       }
       for (const seat of seats) {
@@ -502,6 +506,26 @@ export default function TripCard({ trip }: { trip: TripProps }) {
                   <div className="text-sm font-bold text-gray-900 mb-3">Thông tin hành khách</div>
                   <div className="space-y-3">
                     <div>
+                      <div className="text-xs text-gray-600 mb-1">Số vé</div>
+                      <select
+                        value={passengerCount}
+                        onChange={(e) => {
+                          const next = Number(e.target.value);
+                          setPassengerCount(next);
+                          setSelectedSeatsByTripId({});
+                          setSeatMapError(null);
+                        }}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#2474E5] focus:ring-1 focus:ring-[#2474E5] bg-white"
+                        title="Số vé"
+                      >
+                        {[1, 2, 3, 4].map((n) => (
+                          <option key={n} value={n}>
+                            {n}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
                       <div className="text-xs text-gray-600 mb-1">Họ tên</div>
                       <input
                         value={customerName}
@@ -577,7 +601,9 @@ export default function TripCard({ trip }: { trip: TripProps }) {
                   <div className="flex items-center justify-between mb-4">
                     <div className="text-sm font-bold text-gray-900">Sơ đồ ghế</div>
                     <div className="text-xs text-gray-500">
-                      {tripLegs.length > 1 ? 'Chuyến nối: mỗi chặng chọn 1 ghế' : 'Tối đa 4 ghế'}
+                      {tripLegs.length > 1
+                        ? `Chuyến nối: chọn ${formatSeatCount(Math.max(1, Math.min(4, passengerCount)))} mỗi chặng`
+                        : `Chọn tối đa ${formatSeatCount(Math.max(1, Math.min(4, passengerCount)))}`}
                     </div>
                   </div>
 

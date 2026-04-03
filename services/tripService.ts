@@ -11,8 +11,8 @@ export const tripService = {
     try {
       const response = await api.get('/trips', {
         params: {
-          origin_id: originId,
-          destination_id: destinationId,
+          origin_province_id: originId,
+          destination_province_id: destinationId,
           date: date,
           max_legs: maxLegs,
           min_layover_minutes: minLayoverMinutes
@@ -78,5 +78,30 @@ export const tripService = {
       console.error('Error creating trip:', error);
       throw error;
     }
-  }
+  },
+
+  updateTrip: async (id: number, data: {
+    route_id?: number;
+    bus_id?: number;
+    departure_time?: string;
+    price_modifier?: number;
+  }) => {
+    try {
+      const response = await api.put(`/admin/trips/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating trip:', error);
+      throw error;
+    }
+  },
+
+  updateTripStatus: async (id: number, status: string) => {
+    try {
+      const response = await api.patch(`/admin/trips/${id}/status`, { status });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating trip status:', error);
+      throw error;
+    }
+  },
 };

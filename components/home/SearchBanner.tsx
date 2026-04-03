@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { MapPin, RefreshCw, Bus, Plane, Train, Car, Calendar, X, BadgeCheck, Headphones, Tag, CircleDollarSign } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import DatePicker from './DatePicker';
-import { stationService, StationResponse } from '../../services/stationService';
+import { provinceService, type ProvinceResponse } from '../../services/provinceService';
 
 const tabs = [
   { id: 'bus', label: 'Xe khách', icon: <Bus size={18} />, badge: '' },
@@ -25,13 +25,13 @@ export default function SearchBanner() {
   const [to, setTo] = useState('');
   const [fromId, setFromId] = useState<number | null>(null);
   const [toId, setToId] = useState<number | null>(null);
-  const [stations, setStations] = useState<StationResponse[]>([]);
+  const [provinces, setProvinces] = useState<ProvinceResponse[]>([]);
 
   useEffect(() => {
-    stationService.getAllStations().then(data => {
-      setStations(data);
+    provinceService.getAllProvinces().then(data => {
+      setProvinces(data);
     }).catch(err => {
-      console.error('Failed to fetch stations:', err);
+      console.error('Failed to fetch provinces:', err);
     });
   }, []);
 
@@ -117,9 +117,9 @@ export default function SearchBanner() {
 
         {/* Search Form */}
         <div className="p-4 relative">
-          <datalist id="station-list">
-            {stations.map(s => (
-              <option key={s.id} value={s.name}>{s.city}</option>
+          <datalist id="province-list">
+            {provinces.map(p => (
+              <option key={p.id} value={p.name}>{p.name}</option>
             ))}
           </datalist>
           <div className="flex flex-col xl:flex-row items-stretch gap-2">
@@ -135,12 +135,12 @@ export default function SearchBanner() {
                   <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Nơi xuất phát</span>
                   <input
                     type="text"
-                    list="station-list"
+                    list="province-list"
                     value={from}
                     onChange={e => {
                       const val = e.target.value;
                       setFrom(val);
-                      const found = stations.find(s => s.name === val);
+                      const found = provinces.find(p => p.name === val);
                       setFromId(found ? found.id : null);
                     }}
                     placeholder="Chọn điểm đi"
@@ -167,12 +167,12 @@ export default function SearchBanner() {
                   <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Nơi đến</span>
                   <input
                     type="text"
-                    list="station-list"
+                    list="province-list"
                     value={to}
                     onChange={e => {
                       const val = e.target.value;
                       setTo(val);
-                      const found = stations.find(s => s.name === val);
+                      const found = provinces.find(p => p.name === val);
                       setToId(found ? found.id : null);
                     }}
                     placeholder="Chọn điểm đến"

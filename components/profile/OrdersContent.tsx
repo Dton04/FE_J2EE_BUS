@@ -166,7 +166,7 @@ export default function OrdersContent() {
                   {/* Card Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-gray-100">
                     <div className="flex items-center gap-2">
-                      <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded text-xs font-bold font-mono tracking-wider">
+                      <span className="bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1 rounded-lg text-xs font-black font-mono tracking-wider shadow-sm">
                         #{booking.booking_code}
                       </span>
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${statusInfo.color}`}>
